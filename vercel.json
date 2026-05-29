@@ -1,0 +1,6 @@
+{
+  "outputDirectory": "artifacts/wallpaper-minimal/dist/public",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
