@@ -15,4 +15,6 @@ export interface CheckoutInput {
   bundle_name?: string | null;
   price: number;
   name: string;
+  /** @nullable */
+  promo_code?: string | null;
 }

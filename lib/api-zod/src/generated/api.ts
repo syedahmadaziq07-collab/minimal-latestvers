@@ -133,11 +133,15 @@ export const CreateCheckoutSessionBody = zod.object({
   "wallpaper_id": zod.string().nullish(),
   "bundle_name": zod.string().nullish(),
   "price": zod.number(),
-  "name": zod.string()
+  "name": zod.string(),
+  "promo_code": zod.string().nullish()
 })
 
 export const CreateCheckoutSessionResponse = zod.object({
-  "url": zod.string()
+  "url": zod.string(),
+  "original_price": zod.number(),
+  "final_price": zod.number(),
+  "discount_applied": zod.number()
 })
 
 
@@ -149,6 +153,263 @@ export const SubscribeNewsletterBody = zod.object({
 })
 
 export const SubscribeNewsletterResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary List all orders
+ */
+export const ListOrdersResponseItem = zod.object({
+  "id": zod.string(),
+  "stripe_session_id": zod.string().optional(),
+  "product_name": zod.string(),
+  "product_type": zod.string(),
+  "price": zod.number(),
+  "customer_email": zod.string(),
+  "status": zod.string(),
+  "promo_code": zod.string().nullish(),
+  "created_at": zod.string()
+})
+export const ListOrdersResponse = zod.array(ListOrdersResponseItem)
+
+
+/**
+ * @summary Create an order record
+ */
+export const CreateOrderBody = zod.object({
+  "stripe_session_id": zod.string().optional(),
+  "product_name": zod.string(),
+  "product_type": zod.string(),
+  "price": zod.number(),
+  "customer_email": zod.string(),
+  "status": zod.string().optional(),
+  "promo_code": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get revenue and order stats for dashboard
+ */
+export const GetOrderStatsResponse = zod.object({
+  "total_revenue": zod.number(),
+  "total_orders": zod.number(),
+  "orders_today": zod.number(),
+  "revenue_today": zod.number(),
+  "revenue_by_type": zod.array(zod.object({
+  "type": zod.string(),
+  "revenue": zod.number(),
+  "count": zod.number()
+})),
+  "recent_orders": zod.array(zod.object({
+  "id": zod.string(),
+  "stripe_session_id": zod.string().optional(),
+  "product_name": zod.string(),
+  "product_type": zod.string(),
+  "price": zod.number(),
+  "customer_email": zod.string(),
+  "status": zod.string(),
+  "promo_code": zod.string().nullish(),
+  "created_at": zod.string()
+}))
+})
+
+
+/**
+ * @summary Update order status
+ */
+export const UpdateOrderParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateOrderBody = zod.object({
+  "status": zod.string().optional(),
+  "customer_email": zod.string().optional()
+})
+
+export const UpdateOrderResponse = zod.object({
+  "id": zod.string(),
+  "stripe_session_id": zod.string().optional(),
+  "product_name": zod.string(),
+  "product_type": zod.string(),
+  "price": zod.number(),
+  "customer_email": zod.string(),
+  "status": zod.string(),
+  "promo_code": zod.string().nullish(),
+  "created_at": zod.string()
+})
+
+
+/**
+ * @summary Delete an order
+ */
+export const DeleteOrderParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary List all bundles
+ */
+export const ListBundlesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "wallpaper_count": zod.number(),
+  "price": zod.number(),
+  "popular": zod.boolean(),
+  "active": zod.boolean(),
+  "created_at": zod.string()
+})
+export const ListBundlesResponse = zod.array(ListBundlesResponseItem)
+
+
+/**
+ * @summary Create a bundle
+ */
+export const CreateBundleBody = zod.object({
+  "name": zod.string(),
+  "description": zod.string(),
+  "wallpaper_count": zod.number(),
+  "price": zod.number(),
+  "popular": zod.boolean().optional(),
+  "active": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Update a bundle
+ */
+export const UpdateBundleParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateBundleBody = zod.object({
+  "name": zod.string().optional(),
+  "description": zod.string().optional(),
+  "wallpaper_count": zod.number().optional(),
+  "price": zod.number().optional(),
+  "popular": zod.boolean().optional(),
+  "active": zod.boolean().optional()
+})
+
+export const UpdateBundleResponse = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "wallpaper_count": zod.number(),
+  "price": zod.number(),
+  "popular": zod.boolean(),
+  "active": zod.boolean(),
+  "created_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a bundle
+ */
+export const DeleteBundleParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary List all promo codes
+ */
+export const ListPromosResponseItem = zod.object({
+  "id": zod.string(),
+  "code": zod.string(),
+  "discount_type": zod.enum(['percent', 'fixed']),
+  "discount_value": zod.number(),
+  "max_uses": zod.number().nullish(),
+  "uses_count": zod.number(),
+  "active": zod.boolean(),
+  "expires_at": zod.string().nullish(),
+  "created_at": zod.string()
+})
+export const ListPromosResponse = zod.array(ListPromosResponseItem)
+
+
+/**
+ * @summary Create a promo code
+ */
+export const CreatePromoBody = zod.object({
+  "code": zod.string(),
+  "discount_type": zod.enum(['percent', 'fixed']),
+  "discount_value": zod.number(),
+  "max_uses": zod.number().nullish(),
+  "active": zod.boolean().optional(),
+  "expires_at": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a promo code
+ */
+export const UpdatePromoParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdatePromoBody = zod.object({
+  "code": zod.string().optional(),
+  "discount_type": zod.enum(['percent', 'fixed']).optional(),
+  "discount_value": zod.number().optional(),
+  "max_uses": zod.number().nullish(),
+  "active": zod.boolean().optional(),
+  "expires_at": zod.string().nullish()
+})
+
+export const UpdatePromoResponse = zod.object({
+  "id": zod.string(),
+  "code": zod.string(),
+  "discount_type": zod.enum(['percent', 'fixed']),
+  "discount_value": zod.number(),
+  "max_uses": zod.number().nullish(),
+  "uses_count": zod.number(),
+  "active": zod.boolean(),
+  "expires_at": zod.string().nullish(),
+  "created_at": zod.string()
+})
+
+
+/**
+ * @summary Delete a promo code
+ */
+export const DeletePromoParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
+ * @summary Validate a promo code and get discount
+ */
+export const ValidatePromoBody = zod.object({
+  "code": zod.string(),
+  "price": zod.number()
+})
+
+export const ValidatePromoResponse = zod.object({
+  "valid": zod.boolean(),
+  "discount_type": zod.string().nullish(),
+  "discount_value": zod.number().nullish(),
+  "final_price": zod.number(),
+  "message": zod.string()
+})
+
+
+/**
+ * @summary Get all admin settings
+ */
+export const GetSettingsResponse = zod.record(zod.string(), zod.string())
+
+
+/**
+ * @summary Save admin settings
+ */
+export const SaveSettingsBody = zod.record(zod.string(), zod.string())
+
+export const SaveSettingsResponse = zod.object({
   "success": zod.boolean(),
   "message": zod.string().optional()
 })

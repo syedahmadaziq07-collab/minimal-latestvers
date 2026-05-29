@@ -57,10 +57,15 @@ export interface CheckoutInput {
   bundle_name?: string | null;
   price: number;
   name: string;
+  /** @nullable */
+  promo_code?: string | null;
 }
 
 export interface CheckoutSession {
   url: string;
+  original_price: number;
+  final_price: number;
+  discount_applied: number;
 }
 
 export interface NewsletterInput {
@@ -71,6 +76,156 @@ export interface SuccessResponse {
   success: boolean;
   message?: string;
 }
+
+export interface Order {
+  id: string;
+  stripe_session_id?: string;
+  product_name: string;
+  product_type: string;
+  price: number;
+  customer_email: string;
+  status: string;
+  /** @nullable */
+  promo_code?: string | null;
+  created_at: string;
+}
+
+export interface OrderInput {
+  stripe_session_id?: string;
+  product_name: string;
+  product_type: string;
+  price: number;
+  customer_email: string;
+  status?: string;
+  /** @nullable */
+  promo_code?: string | null;
+}
+
+export interface OrderUpdate {
+  status?: string;
+  customer_email?: string;
+}
+
+export type OrderStatsRevenueByTypeItem = {
+  type: string;
+  revenue: number;
+  count: number;
+};
+
+export interface OrderStats {
+  total_revenue: number;
+  total_orders: number;
+  orders_today: number;
+  revenue_today: number;
+  revenue_by_type: OrderStatsRevenueByTypeItem[];
+  recent_orders: Order[];
+}
+
+export interface Bundle {
+  id: string;
+  name: string;
+  description: string;
+  wallpaper_count: number;
+  price: number;
+  popular: boolean;
+  active: boolean;
+  created_at: string;
+}
+
+export interface BundleInput {
+  name: string;
+  description: string;
+  wallpaper_count: number;
+  price: number;
+  popular?: boolean;
+  active?: boolean;
+}
+
+export interface BundleUpdate {
+  name?: string;
+  description?: string;
+  wallpaper_count?: number;
+  price?: number;
+  popular?: boolean;
+  active?: boolean;
+}
+
+export type PromoCodeDiscountType = typeof PromoCodeDiscountType[keyof typeof PromoCodeDiscountType];
+
+
+export const PromoCodeDiscountType = {
+  percent: 'percent',
+  fixed: 'fixed',
+} as const;
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount_type: PromoCodeDiscountType;
+  discount_value: number;
+  /** @nullable */
+  max_uses?: number | null;
+  uses_count: number;
+  active: boolean;
+  /** @nullable */
+  expires_at?: string | null;
+  created_at: string;
+}
+
+export type PromoCodeInputDiscountType = typeof PromoCodeInputDiscountType[keyof typeof PromoCodeInputDiscountType];
+
+
+export const PromoCodeInputDiscountType = {
+  percent: 'percent',
+  fixed: 'fixed',
+} as const;
+
+export interface PromoCodeInput {
+  code: string;
+  discount_type: PromoCodeInputDiscountType;
+  discount_value: number;
+  /** @nullable */
+  max_uses?: number | null;
+  active?: boolean;
+  /** @nullable */
+  expires_at?: string | null;
+}
+
+export type PromoCodeUpdateDiscountType = typeof PromoCodeUpdateDiscountType[keyof typeof PromoCodeUpdateDiscountType];
+
+
+export const PromoCodeUpdateDiscountType = {
+  percent: 'percent',
+  fixed: 'fixed',
+} as const;
+
+export interface PromoCodeUpdate {
+  code?: string;
+  discount_type?: PromoCodeUpdateDiscountType;
+  discount_value?: number;
+  /** @nullable */
+  max_uses?: number | null;
+  active?: boolean;
+  /** @nullable */
+  expires_at?: string | null;
+}
+
+export interface PromoValidateInput {
+  code: string;
+  price: number;
+}
+
+export interface PromoValidateResult {
+  valid: boolean;
+  /** @nullable */
+  discount_type?: string | null;
+  /** @nullable */
+  discount_value?: number | null;
+  final_price: number;
+  message: string;
+}
+
+export interface SettingsMap {[key: string]: string}
 
 export type ListWallpapersParams = {
 category?: string;

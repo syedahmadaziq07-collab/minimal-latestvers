@@ -6,9 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CheckoutSession {
-  url: string;
-  original_price: number;
-  final_price: number;
-  discount_applied: number;
-}
+export type OrderStatsRevenueByTypeItem = {
+  type: string;
+  revenue: number;
+  count: number;
+};
