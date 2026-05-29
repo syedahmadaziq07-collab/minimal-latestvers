@@ -1,0 +1,26 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "d5zWJlysJPFlyRqtcJMUk"
+uri = "file://artifacts/wallpaper-minimal/public/placeholder-1.png"
+type = "image"
+title = "soft pastel minimalist wallpaper"
+
+[[generated]]
+id = "mm3w6E2vbzz8pDUoCPBoh"
+uri = "file://artifacts/wallpaper-minimal/public/placeholder-2.png"
+type = "image"
+title = "japan aesthetic warm wallpaper"
+
+[[generated]]
+id = "DFGakbDA8Ds7oEdjlHeX5"
+uri = "file://artifacts/wallpaper-minimal/public/placeholder-3.png"
+type = "image"
+title = "cozy minimal nature wallpaper"
+
+[[generated]]
+id = "8QhDrdCGzhloC1jOVwryr"
+uri = "file://artifacts/wallpaper-minimal/public/placeholder-4.png"
+type = "image"
+title = "calm architectural lines wallpaper"

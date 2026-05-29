@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: WALLPAPER.MINIMAL API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: wallpapers
+    description: Wallpaper operations
+  - name: checkout
+    description: Stripe checkout operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,175 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /wallpapers:
+    get:
+      operationId: listWallpapers
+      tags: [wallpapers]
+      summary: List all wallpapers
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: featured
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of wallpapers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wallpaper"
+    post:
+      operationId: createWallpaper
+      tags: [wallpapers]
+      summary: Create a new wallpaper (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WallpaperInput"
+      responses:
+        "201":
+          description: Created wallpaper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallpaper"
+
+  /wallpapers/{id}:
+    get:
+      operationId: getWallpaper
+      tags: [wallpapers]
+      summary: Get a single wallpaper
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Wallpaper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallpaper"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateWallpaper
+      tags: [wallpapers]
+      summary: Update a wallpaper (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WallpaperUpdate"
+      responses:
+        "200":
+          description: Updated wallpaper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallpaper"
+    delete:
+      operationId: deleteWallpaper
+      tags: [wallpapers]
+      summary: Delete a wallpaper (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+
+  /wallpapers/featured:
+    get:
+      operationId: getFeaturedWallpapers
+      tags: [wallpapers]
+      summary: Get featured wallpapers for iPhone mockup cycling
+      responses:
+        "200":
+          description: Featured wallpapers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Wallpaper"
+
+  /wallpapers/categories:
+    get:
+      operationId: getCategories
+      tags: [wallpapers]
+      summary: Get all available categories with counts
+      responses:
+        "200":
+          description: Categories with counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategoryCount"
+
+  /checkout/session:
+    post:
+      operationId: createCheckoutSession
+      tags: [checkout]
+      summary: Create a Stripe checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutInput"
+      responses:
+        "200":
+          description: Checkout session URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+
+  /newsletter/subscribe:
+    post:
+      operationId: subscribeNewsletter
+      tags: [wallpapers]
+      summary: Subscribe to newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsletterInput"
+      responses:
+        "200":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +202,100 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Wallpaper:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        image_url:
+          type: string
+        featured:
+          type: boolean
+        created_at:
+          type: string
+      required: [id, name, category, price, image_url, featured, created_at]
+
+    WallpaperInput:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        image_url:
+          type: string
+        featured:
+          type: boolean
+      required: [name, category, price, image_url]
+
+    WallpaperUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        price:
+          type: number
+        image_url:
+          type: string
+        featured:
+          type: boolean
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+      required: [category, count]
+
+    CheckoutInput:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [single, pack, bundle]
+        wallpaper_id:
+          type: ["string", "null"]
+        bundle_name:
+          type: ["string", "null"]
+        price:
+          type: number
+        name:
+          type: string
+      required: [type, price, name]
+
+    CheckoutSession:
+      type: object
+      properties:
+        url:
+          type: string
+      required: [url]
+
+    NewsletterInput:
+      type: object
+      properties:
+        email:
+          type: string
+      required: [email]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]

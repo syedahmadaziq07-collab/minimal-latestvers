@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface WallpaperInput {
+  name: string;
+  category: string;
+  price: number;
+  image_url: string;
+  featured?: boolean;
 }
