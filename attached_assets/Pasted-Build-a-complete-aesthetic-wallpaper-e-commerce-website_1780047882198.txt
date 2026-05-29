@@ -1,0 +1,145 @@
+Build a complete aesthetic wallpaper e-commerce website 
+called WALLPAPER.MINIMAL using React + TypeScript + Vite.
+
+IMPORTANT - Keep it simple, single package.json, 
+NOT a monorepo. Must deploy cleanly to Vercel.
+
+BRAND
+- Name: WALLPAPER.MINIMAL
+- Tagline: "Dress your screen, softly."
+- Vibe: Soft, warm, editorial minimal
+
+COLOR PALETTE
+- Background: #FFFFFF
+- Primary accent: #D4C5B0 (warm taupe)
+- Secondary accent: #9E8E78 (mocha)
+- Text primary: #1A1A1A
+- Text secondary: #6B6B6B
+- Card background: #F7F5F2
+- Border: #E8E4DF
+
+TYPOGRAPHY
+- Headings: Cormorant Garamond (Google Fonts)
+- Body: DM Sans (Google Fonts)
+
+BUTTONS
+- Primary: background #1A1A1A, text white, 
+  border-radius 2px, letter-spacing 3px uppercase
+  hover background #9E8E78, transition 0.3s
+- Secondary: transparent, border 1.5px solid #1A1A1A,
+  hover background #1A1A1A text white
+- Pack button: background #D4C5B0, text #1A1A1A,
+  hover background #9E8E78
+
+NAVBAR
+- Logo left: WALLPAPER.MINIMAL (Cormorant Garamond italic)
+- Links: SHOP · COLLECTIONS · BUNDLES · PRICING
+- Sticky with blur background on scroll
+- Mobile hamburger menu
+
+SECTION 1 - HERO
+- Full viewport height, white background
+- Headline: "Dress Your Screen, Softly." (72px italic)
+- Subtext: "Curated aesthetic wallpapers for your iPhone. 
+  Minimalist. Warm. Yours."
+- Buttons: "SHOP NOW" (primary) and "BROWSE COLLECTIONS" (secondary)
+- iPhone mockup on right cycling through wallpapers
+- Floating animated tags: 4K · Minimalist · Aesthetic · 
+  Cozy · Japan · Pastel
+
+SECTION 2 - FEATURED DROPS
+- Title: "Latest Drops" (Cormorant Garamond italic)
+- Subtitle: "New wallpapers, every week."
+- 3 column grid desktop, 2 mobile
+- 6 wallpaper cards each:
+  - Portrait image 9:19.5 ratio
+  - Category tag top-left (dark, white text, uppercase)
+  - Wallpaper name (Cormorant Garamond)
+  - Price: $4
+  - "Get This →" button
+  - Hover: translate up -4px, border mocha
+
+SECTION 3 - MOOD COLLECTIONS
+- Title: "Shop by Mood"
+- Filter tabs: All · Minimalist · Japan · Cozy · Nature · 
+  Pastel · Anime · Sunset · Architecture · Couple · Calm
+- Active tab: dark background white text
+- Grid filtered on click
+- Fetch wallpapers from Supabase
+
+SECTION 4 - IPHONE SHOWCASE
+- Title: "Made for Your Screen"
+- Left: iPhone mockup cycling through wallpapers
+- Right: 
+  - 4K Resolution — "Every pixel, perfected."
+  - OLED Optimized — "True blacks, vivid contrast."
+  - Instant Download — "Yours in seconds."
+
+SECTION 5 - BUNDLES
+- Title: "Aesthetic Bundles"
+- 3 cards:
+  - Starter Pack — 10 wallpapers — $12
+  - Cozy Pack — 18 wallpapers — $22 (Most Popular badge)
+  - Full Access — All wallpapers + future drops — $45
+- Middle card larger with mocha border
+
+SECTION 6 - PRICING
+- Title: "Simple Pricing"
+- Single $4 · Pack $22 · All Access $45
+- Middle card: dark #1A1A1A background white text
+- Below: "Secure checkout via Stripe · Instant download"
+
+SECTION 7 - NEWSLETTER
+- Taupe #D4C5B0 background
+- Title: "Get First Access to New Drops"
+- Email input + "NOTIFY ME" button
+
+FOOTER
+- Background: #1A1A1A
+- Logo WALLPAPER.MINIMAL white italic
+- Tagline: "Dress your screen, softly."
+- 3 columns: Shop · Help · Follow
+- Copyright: © 2025 WALLPAPER.MINIMAL
+
+ADMIN PAGE
+- Route: /admin
+- Password gate using env variable VITE_ADMIN_PASSWORD
+  default password: minimal2025
+- Upload form:
+  - Drag & drop image with live preview
+  - Wallpaper name (text input)
+  - Category (free text input with suggestions:
+    Minimalist, Japan, Cozy, Nature, Pastel, Anime, 
+    Sunset, Architecture, Couple, Calm, Aesthetic)
+  - Price (number input, default 4)
+  - Featured toggle
+- Save image to Supabase Storage bucket "wallpapers"
+- Save data to Supabase table "wallpapers" with columns:
+  id, name, category, price, image_url, featured, created_at
+- Show grid of all wallpapers with edit, delete, 
+  featured toggle buttons
+
+SUPABASE
+- VITE_SUPABASE_URL from env
+- VITE_SUPABASE_ANON_KEY from env
+- Fetch all wallpapers dynamically
+- iPhone mockup cycles through featured wallpapers
+
+STRIPE
+- VITE_STRIPE_PUBLISHABLE_KEY from env
+- All buy buttons open Stripe Checkout
+- Currency: USD
+- /success page after payment
+- Cancel redirects to homepage
+
+ROUTING
+- react-router-dom
+- /admin protected route
+- vercel.json at root:
+  {"rewrites": [{"source": "/(.*)", "destination": "/index.html"}]}
+
+BUILD
+- Single package.json at root (NOT monorepo)
+- Build command: "vite build"
+- Output: dist folder
+- Must pass "npm run build" cleanly
