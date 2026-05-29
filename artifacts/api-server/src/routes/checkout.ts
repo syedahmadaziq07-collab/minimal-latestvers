@@ -9,7 +9,7 @@ function getStripe() {
   if (!key) {
     throw new Error("STRIPE_SECRET_KEY not set");
   }
-  return new Stripe(key, { apiVersion: "2025-04-30.basil" });
+  return new Stripe(key, { apiVersion: "2026-05-27.dahlia" });
 }
 
 function getBaseUrl(): string {
