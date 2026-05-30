@@ -6,7 +6,7 @@ import {
   useListBundles, useCreateBundle, useUpdateBundle, useDeleteBundle, getListBundlesQueryKey,
   useListPromos, useCreatePromo, useUpdatePromo, useDeletePromo, getListPromosQueryKey,
   useGetSettings, useSaveSettings, getGetSettingsQueryKey
-} from "@workspace/api-client-react";
+} from "@/lib/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 

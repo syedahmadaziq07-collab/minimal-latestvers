@@ -8,7 +8,7 @@ import {
   useSubscribeNewsletter,
   getListWallpapersQueryKey,
   getGetCategoriesQueryKey,
-} from "@workspace/api-client-react";
+} from "@/lib/queries";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,4 +1,4 @@
-import { useListWallpapers, getListWallpapersQueryKey, useCreateCheckoutSession, useGetCategories, getGetCategoriesQueryKey } from "@workspace/api-client-react";
+import { useListWallpapers, getListWallpapersQueryKey, useCreateCheckoutSession, useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
 import { useState } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { useGetFeaturedWallpapers, getGetFeaturedWallpapersQueryKey } from "@workspace/api-client-react";
+import { useListWallpapers, getListWallpapersQueryKey } from "@/lib/queries";
 
 export function IPhoneMockup() {
-  const { data: featured } = useGetFeaturedWallpapers({
-    query: { queryKey: getGetFeaturedWallpapersQueryKey() }
-  });
+  const { data: featured } = useListWallpapers(
+    { featured: true },
+    { query: { queryKey: getListWallpapersQueryKey({ featured: true }) } }
+  );
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -15,9 +16,10 @@ export function IPhoneMockup() {
     "/placeholder-4.png",
   ];
 
-  const images = featured && featured.length > 0
-    ? ( featured || []).map(f => f.image_url)
-    : fallbackImages;
+  const images =
+    featured && featured.length > 0
+      ? featured.map((f) => f.image_url)
+      : fallbackImages;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -32,7 +34,7 @@ export function IPhoneMockup() {
         <div className="w-[100px] h-[30px] bg-black rounded-full" />
       </div>
       <div className="relative w-full h-full rounded-[40px] overflow-hidden bg-gray-900 isolation-isolate">
-        {(images || []).map((src, idx) => (
+        {images.map((src, idx) => (
           <div
             key={src}
             className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${

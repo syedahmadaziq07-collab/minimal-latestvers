@@ -1,0 +1,1 @@
+- [Supabase direct frontend arch](supabase-frontend-arch.md) — wallpaper-minimal reads/writes Supabase directly; never re-add api-server imports to pages.

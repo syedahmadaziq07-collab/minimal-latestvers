@@ -1,4 +1,4 @@
-import { useGetCategories, getGetCategoriesQueryKey } from "@workspace/api-client-react";
+import { useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 

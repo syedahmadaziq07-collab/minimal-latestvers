@@ -1,4 +1,4 @@
-import { useCreateCheckoutSession } from "@workspace/api-client-react";
+import { useCreateCheckoutSession } from "@/lib/queries";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { Link } from "wouter";
