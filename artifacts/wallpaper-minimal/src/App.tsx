@@ -22,13 +22,6 @@ import { Download } from "@/pages/download";
 
 const GA_ID = import.meta.env.VITE_GA_ID as string | undefined;
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-    dataLayer?: unknown[];
-  }
-}
-
 function loadGA() {
   if (!GA_ID || document.querySelector("#ga-script")) return;
   const script = document.createElement("script");
@@ -38,8 +31,8 @@ function loadGA() {
   document.head.appendChild(script);
 
   window.dataLayer = window.dataLayer || [];
-  window.gtag = function () { window.dataLayer!.push(arguments); };
-  window.gtag("js", new Date());
+  window.gtag = function gtag() { window.dataLayer!.push(arguments); };
+  window.gtag("js", new Date().toISOString());
   window.gtag("config", GA_ID, { send_page_view: false });
 }
 
