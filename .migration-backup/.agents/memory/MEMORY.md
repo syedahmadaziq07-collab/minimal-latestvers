@@ -1,1 +1,1 @@
-- [Supabase direct frontend arch](supabase-frontend-arch.md) — wallpaper-minimal reads/writes Supabase directly; never re-add api-server imports to pages.
+- [Protected files](protected-files.md) — vercel.json, both vite.config.ts files, api/tsconfig.json must NEVER be modified or deleted

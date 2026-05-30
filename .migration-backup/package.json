@@ -9,12 +9,11 @@
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
+  "dependencies": {
+    "stripe": "22.2.0"
+  },
   "devDependencies": {
     "prettier": "^3.8.3",
     "typescript": "~5.9.3"
-  },
-  "dependencies": {
-    "@vercel/node": "^5.8.8",
-    "stripe": "^22.2.0"
   }
 }

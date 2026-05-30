@@ -1,6 +1,5 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { CreateCheckoutSessionBody } from "@workspace/api-zod";
 
 const router = Router();
 
@@ -21,15 +20,13 @@ function getBaseUrl(): string {
   return "http://localhost:80";
 }
 
-router.post("/checkout/session", async (req, res) => {
+router.post("/checkout", async (req, res) => {
   try {
-    const parsed = CreateCheckoutSessionBody.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid input" });
+    const { name, price, type } = req.body ?? {};
+    if (!name || price == null || !type) {
+      res.status(400).json({ error: "Missing required fields: name, price, type" });
       return;
     }
-
-    const { name, price, type } = parsed.data;
     const baseUrl = getBaseUrl();
 
     let stripe: Stripe;

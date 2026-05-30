@@ -1,12 +1,10 @@
 /**
- * Drop-in replacement for @workspace/api-client-react hooks.
- * All data is fetched directly from Supabase — no api-server dependency.
- * Checkout still requires VITE_API_URL pointing to the deployed API server.
+ * All data operations use Supabase client directly from the browser.
+ * No api-server dependency for data — checkout still goes through /api/checkout.
  */
 import { useQuery, useMutation, UseQueryOptions } from "@tanstack/react-query";
 import { supabase as _supabase } from "./supabase";
 
-/** Throws a clear error when Supabase env vars are not configured. */
 function db() {
   if (!_supabase) {
     throw new Error(
@@ -17,7 +15,7 @@ function db() {
 }
 
 // ---------------------------------------------------------------------------
-// Types
+// Types — column names match the actual Supabase tables
 // ---------------------------------------------------------------------------
 
 export interface Wallpaper {
@@ -37,13 +35,10 @@ export interface CategoryCount {
 
 export interface Order {
   id: string;
-  stripe_session_id: string | null;
-  product_name: string;
-  product_type: string;
-  price: number;
   customer_email: string;
+  product: string;
+  amount: number;
   status: string;
-  promo_code: string | null;
   created_at: string;
 }
 
@@ -56,7 +51,7 @@ export interface OrderStats {
   recent_orders: {
     created_at: string;
     customer_email: string;
-    type: string;
+    product: string;
     amount: number;
   }[];
 }
@@ -67,8 +62,8 @@ export interface Bundle {
   description: string;
   wallpaper_count: number;
   price: number;
-  popular: boolean;
-  active: boolean;
+  is_popular: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -79,7 +74,7 @@ export interface PromoCode {
   discount_value: number;
   max_uses: number | null;
   uses_count: number;
-  active: boolean;
+  is_active: boolean;
   expires_at: string | null;
   created_at: string;
 }
@@ -171,7 +166,7 @@ export function useDeleteWallpaper() {
 }
 
 // ---------------------------------------------------------------------------
-// Categories  (derived from wallpapers table, grouped client-side)
+// Categories (derived from wallpapers table, grouped client-side)
 // ---------------------------------------------------------------------------
 
 export function useGetCategories(options?: {
@@ -180,18 +175,13 @@ export function useGetCategories(options?: {
   return useQuery<CategoryCount[]>({
     queryKey: getGetCategoriesQueryKey(),
     queryFn: async () => {
-      const { data, error } = await db()
-        .from("wallpapers")
-        .select("category");
+      const { data, error } = await db().from("wallpapers").select("category");
       if (error) throw error;
       const counts: Record<string, number> = {};
       for (const row of data ?? []) {
         counts[row.category] = (counts[row.category] ?? 0) + 1;
       }
-      return Object.entries(counts).map(([category, count]) => ({
-        category,
-        count,
-      }));
+      return Object.entries(counts).map(([category, count]) => ({ category, count }));
     },
     ...options?.query,
   });
@@ -213,7 +203,7 @@ export function useSubscribeNewsletter() {
 }
 
 // ---------------------------------------------------------------------------
-// Checkout  (Vercel serverless function at /api/checkout)
+// Checkout (Vercel serverless function at /api/checkout)
 // ---------------------------------------------------------------------------
 
 export function useCreateCheckoutSession() {
@@ -241,7 +231,7 @@ export function useCreateCheckoutSession() {
 }
 
 // ---------------------------------------------------------------------------
-// Orders
+// Orders  (columns: id, customer_email, product, amount, status, created_at)
 // ---------------------------------------------------------------------------
 
 export function useListOrders(options?: {
@@ -299,13 +289,13 @@ export function useGetOrderStats(options?: {
     queryFn: async () => {
       const { data, error } = await db()
         .from("orders")
-        .select("price, product_type, customer_email, created_at, status")
+        .select("amount, product, customer_email, created_at, status")
         .order("created_at", { ascending: false });
       if (error) throw error;
 
       const orders = (data ?? []) as Pick<
         Order,
-        "price" | "product_type" | "customer_email" | "created_at" | "status"
+        "amount" | "product" | "customer_email" | "created_at" | "status"
       >[];
 
       const todayStart = new Date();
@@ -317,12 +307,12 @@ export function useGetOrderStats(options?: {
       const byType: Record<string, number> = {};
 
       for (const o of orders) {
-        const price = Number(o.price);
-        total_revenue += price;
-        byType[o.product_type] = (byType[o.product_type] ?? 0) + price;
+        const amount = Number(o.amount);
+        total_revenue += amount;
+        byType[o.product] = (byType[o.product] ?? 0) + amount;
         if (new Date(o.created_at) >= todayStart) {
           orders_today++;
-          revenue_today += price;
+          revenue_today += amount;
         }
       }
 
@@ -338,8 +328,8 @@ export function useGetOrderStats(options?: {
         recent_orders: orders.slice(0, 5).map((o) => ({
           created_at: o.created_at,
           customer_email: o.customer_email,
-          type: o.product_type,
-          amount: Number(o.price) * 100,
+          product: o.product,
+          amount: Number(o.amount),
         })),
       };
     },
@@ -348,7 +338,7 @@ export function useGetOrderStats(options?: {
 }
 
 // ---------------------------------------------------------------------------
-// Bundles
+// Bundles  (columns: id, name, description, price, wallpaper_count, is_popular, is_active)
 // ---------------------------------------------------------------------------
 
 export function useListBundles(options?: {
@@ -417,7 +407,7 @@ export function useDeleteBundle() {
 }
 
 // ---------------------------------------------------------------------------
-// Promo codes
+// Promo codes  (columns: id, code, discount_type, discount_value, max_uses, uses_count, expires_at, is_active)
 // ---------------------------------------------------------------------------
 
 export function useListPromos(options?: {
@@ -486,7 +476,7 @@ export function useDeletePromo() {
 }
 
 // ---------------------------------------------------------------------------
-// Admin settings  (stored as key/value rows; returned as a flat object)
+// Admin settings  (columns: key, value — stored as key-value rows)
 // ---------------------------------------------------------------------------
 
 export function useGetSettings(options?: {
@@ -510,11 +500,7 @@ export function useGetSettings(options?: {
 export function useSaveSettings() {
   return useMutation({
     mutationFn: async ({ data }: { data: Record<string, string> }) => {
-      const rows = Object.entries(data).map(([key, value]) => ({
-        key,
-        value,
-        updated_at: new Date().toISOString(),
-      }));
+      const rows = Object.entries(data).map(([key, value]) => ({ key, value }));
       const { error } = await db()
         .from("admin_settings")
         .upsert(rows, { onConflict: "key" });

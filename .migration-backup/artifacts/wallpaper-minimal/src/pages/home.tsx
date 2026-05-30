@@ -173,15 +173,16 @@ export function Home() {
                 <div className="p-4 flex flex-col items-center flex-1 justify-between bg-white text-center">
                   <h3 className="font-serif text-xl mb-1">{wallpaper.name}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    ${wallpaper.price}
+                    ${Number(wallpaper.price).toFixed(2)}
                   </p>
                   <button
                     onClick={() =>
-                      handleCheckout("single", wallpaper.price, wallpaper.name, wallpaper.id)
+                      handleCheckout("single", Number(wallpaper.price), wallpaper.name, wallpaper.id)
                     }
-                    className="text-xs uppercase tracking-widest text-primary border-b border-primary pb-1 hover:text-secondary hover:border-secondary transition-colors"
+                    disabled={checkoutMutation.isPending}
+                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Get This →
+                    {checkoutMutation.isPending ? "Loading…" : "GET THIS →"}
                   </button>
                 </div>
               </motion.div>

@@ -1,1 +1,0 @@
-- [Protected files](protected-files.md) — vercel.json, both vite.config.ts files, api/tsconfig.json must NEVER be modified or deleted

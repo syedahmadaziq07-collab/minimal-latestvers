@@ -6,6 +6,8 @@
     "types": ["node"],
     "strict": false,
     "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "moduleResolution": "node"
+  },
+  "include": ["./**/*.ts"]
 }
