@@ -26,7 +26,7 @@ module.exports = async function handler(req, res) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: ${siteUrl}/success,
+      success_url: `${siteUrl}/success`,
       cancel_url: siteUrl,
       metadata: {
         wallpaper_id: wallpaper_id || '',
