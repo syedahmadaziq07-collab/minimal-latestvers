@@ -1,0 +1,70 @@
+The admin page is not saving any data because it's 
+connected to Replit's internal PostgreSQL database 
+instead of Supabase. Everything needs to be migrated 
+to use Supabase directly from the browser.
+
+IMPORTANT: Do NOT use any API server or backend 
+endpoints. All data operations must use Supabase 
+client directly in the frontend using:
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+
+Please fix ALL these admin functions:
+
+1. WALLPAPER UPLOAD (admin.tsx - Wallpapers tab)
+   - Image upload → Supabase Storage bucket "wallpapers"
+   - Save wallpaper data → Supabase table "wallpapers"
+   - Columns: id, name, category, price, image_url, 
+     featured, created_at
+   - Edit wallpaper → update Supabase row
+   - Delete wallpaper → delete from Supabase
+   - Toggle featured → update featured column
+
+2. ORDERS (admin.tsx - Orders tab)
+   - Fetch orders → from Supabase table "orders"
+   - Columns: id, customer_email, product, amount, 
+     status, created_at
+   - Update order status → update Supabase row
+   - Delete order → delete from Supabase
+
+3. BUNDLES (admin.tsx - Bundles tab)
+   - Fetch bundles → from Supabase table "bundles"
+   - Create bundle → insert to Supabase
+   - Edit bundle → update Supabase row
+   - Delete bundle → delete from Supabase
+   - Columns: id, name, description, price, 
+     wallpaper_count, is_popular, is_active
+
+4. PROMO CODES (admin.tsx - Promo Codes tab)
+   - Fetch promo codes → from Supabase table "promo_codes"
+   - Create promo code → insert to Supabase
+   - Toggle active → update is_active column
+   - Delete promo code → delete from Supabase
+   - Columns: id, code, discount_type, discount_value,
+     max_uses, uses_count, expires_at, is_active
+
+5. SETTINGS (admin.tsx - Settings tab)
+   - Fetch settings → from Supabase table "admin_settings"
+   - Save settings → upsert to Supabase
+   - Columns: key, value (key-value store)
+   - Keys: shop_name, tagline, contact_email, 
+     instagram_url, twitter_url, single_price, 
+     pack_price, full_access_price, announcement_text,
+     show_announcement
+
+6. SALES DASHBOARD (admin.tsx - Dashboard tab)
+   - Total revenue → sum from orders table
+   - Total orders → count from orders table
+   - Recent orders → latest 5 from orders table
+   - Revenue chart → group orders by date
+
+Also make sure:
+- Supabase Storage bucket "wallpapers" is set to PUBLIC
+- All tables have Row Level Security (RLS) disabled 
+  or have correct policies for anon access
+- Error handling on all operations
+- Loading states on all buttons
+- Success/error toast messages after each operation
+
+After fixing everything, run typecheck to confirm 
+no TypeScript errors, then push to GitHub.
