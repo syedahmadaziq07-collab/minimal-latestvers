@@ -76,7 +76,7 @@ export function Shop() {
                 className="group relative flex flex-col bg-card rounded-sm overflow-hidden border border-border hover:border-secondary transition-all shadow-sm cursor-pointer"
                 onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
-                <div className="aspect-[9/19.5] relative overflow-hidden bg-muted">
+                <div className="aspect-[9/19.5] relative overflow-hidden bg-muted watermark-overlay">
                   <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 z-10">
                     {wallpaper.category}
                   </div>

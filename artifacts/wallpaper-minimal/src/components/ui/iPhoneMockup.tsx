@@ -33,7 +33,7 @@ export function IPhoneMockup() {
       <div className="absolute top-0 inset-x-0 h-4 w-full flex justify-center z-20 pt-[20px]">
         <div className="w-[100px] h-[30px] bg-black rounded-full" />
       </div>
-      <div className="relative w-full h-full rounded-[40px] overflow-hidden bg-gray-900 isolation-isolate">
+      <div className="relative w-full h-full rounded-[40px] overflow-hidden bg-gray-900 isolation-isolate watermark-overlay">
         {images.map((src, idx) => (
           <div
             key={src}

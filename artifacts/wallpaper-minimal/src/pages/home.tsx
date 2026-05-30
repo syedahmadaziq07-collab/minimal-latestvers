@@ -147,7 +147,7 @@ export function Home() {
                 className="group relative flex flex-col bg-background rounded-sm overflow-hidden border border-border/50 hover:border-secondary transition-all duration-300 shadow-sm cursor-pointer"
                 onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
-                <div className="aspect-[9/19.5] relative overflow-hidden bg-muted">
+                <div className="aspect-[9/19.5] relative overflow-hidden bg-muted watermark-overlay">
                   <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 z-10">
                     {wallpaper.category}
                   </div>
@@ -225,7 +225,7 @@ export function Home() {
                 className="group cursor-pointer"
                 onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
-                <div className="aspect-[9/16] overflow-hidden mb-3 bg-muted rounded-sm relative">
+                <div className="aspect-[9/16] overflow-hidden mb-3 bg-muted rounded-sm relative watermark-overlay">
                   <img
                     src={wallpaper.image_url}
                     alt={wallpaper.name}

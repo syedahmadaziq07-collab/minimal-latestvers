@@ -95,7 +95,7 @@ export function WallpaperDetail() {
           {/* ── Left: Image Gallery (60%) ── */}
           <div className="lg:w-[60%] flex flex-col gap-4">
             {/* Main image */}
-            <div className="relative aspect-[9/16] md:aspect-[3/4] lg:aspect-[9/16] max-h-[75vh] overflow-hidden bg-[#F7F5F2] group">
+            <div className="relative aspect-[9/16] md:aspect-[3/4] lg:aspect-[9/16] max-h-[75vh] overflow-hidden bg-[#F7F5F2] group watermark-overlay">
               <AnimatePresence mode="wait">
                 <motion.img
                   key={activeIdx}
@@ -218,7 +218,7 @@ export function WallpaperDetail() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 watermark-overlay"
             onClick={() => setLightbox(false)}
           >
             <button
