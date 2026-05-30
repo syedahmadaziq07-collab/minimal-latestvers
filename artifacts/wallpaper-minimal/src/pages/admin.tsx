@@ -255,7 +255,7 @@ function WallpapersTab() {
           >
             <input 
               type="file" id="file-upload" className="hidden" accept="image/*" 
-              onChange={(e) => e.target.files && uploadToStorage(e.target.files[0])} 
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadToStorage(f); }}
             />
             {uploading ? (
               <div className="flex flex-col items-center gap-2">
@@ -362,7 +362,7 @@ function WallpapersTab() {
                     <div className="absolute top-2 left-2 bg-black text-white text-[9px] uppercase tracking-wider px-2 py-0.5">Featured</div>
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => { setFormData(wp as any); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, price: wp.price, image_url: wp.image_url, featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
                     <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">
