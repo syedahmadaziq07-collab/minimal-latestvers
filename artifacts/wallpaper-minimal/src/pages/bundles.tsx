@@ -35,7 +35,8 @@ export function Bundles() {
         onSuccess: (res) => {
           window.location.href = res.url;
         },
-        onError: () => {
+        onError: (err: any) => {
+          console.error("Checkout failed:", err);
           toast.error("Failed to initiate checkout");
         },
       }

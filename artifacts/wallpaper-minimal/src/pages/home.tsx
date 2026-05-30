@@ -52,7 +52,7 @@ export function Home() {
       { data: { type, price, name, bundle_name } },
       {
         onSuccess: (res) => { window.location.href = res.url; },
-        onError: () => { toast.error("Failed to initiate checkout"); },
+        onError: (err: any) => { console.error("Checkout failed:", err); toast.error("Failed to initiate checkout"); },
       }
     );
   };
@@ -65,7 +65,7 @@ export function Home() {
       { data: { email } },
       {
         onSuccess: () => { toast.success("Subscribed successfully!"); setEmail(""); },
-        onError: () => { toast.error("Failed to subscribe"); },
+        onError: (err: any) => { console.error("Newsletter subscribe failed:", err); toast.error("Failed to subscribe"); },
       }
     );
   };
