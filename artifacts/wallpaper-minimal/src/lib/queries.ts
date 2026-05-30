@@ -500,11 +500,7 @@ export function useGetSettings(options?: {
 export function useSaveSettings() {
   return useMutation({
     mutationFn: async ({ data }: { data: Record<string, string> }) => {
-      const rows = Object.entries(data).map(([key, value]) => ({
-        key,
-        value,
-        updated_at: new Date().toISOString(),
-      }));
+      const rows = Object.entries(data).map(([key, value]) => ({ key, value }));
       const { error } = await db()
         .from("admin_settings")
         .upsert(rows, { onConflict: "key" });
