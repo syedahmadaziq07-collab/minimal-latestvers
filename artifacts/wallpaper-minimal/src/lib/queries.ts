@@ -203,7 +203,7 @@ export function useSubscribeNewsletter() {
 }
 
 // ---------------------------------------------------------------------------
-// Checkout (Express API at /api/checkout/session)
+// Checkout (Vercel serverless function at /api/checkout)
 // ---------------------------------------------------------------------------
 
 export function useCreateCheckoutSession() {
@@ -219,7 +219,7 @@ export function useCreateCheckoutSession() {
         bundle_name?: string;
       };
     }): Promise<{ url: string }> => {
-      const res = await fetch("/api/checkout/session", {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
