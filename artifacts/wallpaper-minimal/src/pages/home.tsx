@@ -321,31 +321,33 @@ export function Home() {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-primary text-[10px] uppercase tracking-wider px-3 py-1 font-bold">
                 Most Popular
               </div>
-              <h3 className="text-2xl font-medium mb-2">Pack</h3>
+              <h3 className="text-2xl font-medium mb-2">Essential Set</h3>
               <p className="text-primary-foreground/70 text-sm mb-6">18 wallpapers</p>
-              <div className="text-5xl font-serif italic mb-8">$22</div>
+              <div className="text-5xl font-serif italic mb-8">$17.99</div>
               <button
                 onClick={() =>
-                  handleCheckout("pack", 22, "Cozy Pack", undefined, "Cozy Pack")
+                  handleCheckout("pack", 17.99, "Essential Set", undefined, "Essential Set")
                 }
-                className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors rounded-[2px]"
+                disabled={checkoutMutation.isPending}
+                className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Get The Pack
+                {checkoutMutation.isPending ? "Loading…" : "Get Essential Set"}
               </button>
             </div>
 
             {/* All Access */}
             <div className="border border-border p-8 rounded-sm bg-card text-center">
-              <h3 className="text-xl font-medium mb-2">All Access</h3>
+              <h3 className="text-xl font-medium mb-2">Full Collection</h3>
               <p className="text-muted-foreground text-sm mb-6">Everything + future drops</p>
-              <div className="text-4xl font-serif italic mb-8">$45</div>
+              <div className="text-4xl font-serif italic mb-8">$29.99</div>
               <button
                 onClick={() =>
-                  handleCheckout("bundle", 45, "All Access", undefined, "All Access")
+                  handleCheckout("bundle", 29.99, "Full Collection", undefined, "Full Collection")
                 }
-                className="w-full py-3 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors"
+                disabled={checkoutMutation.isPending}
+                className="w-full py-3 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Get All Access
+                {checkoutMutation.isPending ? "Loading…" : "Get Full Collection"}
               </button>
             </div>
           </div>

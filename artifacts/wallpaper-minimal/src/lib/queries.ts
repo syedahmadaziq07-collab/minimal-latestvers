@@ -213,10 +213,8 @@ export function useSubscribeNewsletter() {
 }
 
 // ---------------------------------------------------------------------------
-// Checkout  (still requires an API server — configurable via VITE_API_URL)
+// Checkout  (Vercel serverless function at /api/checkout)
 // ---------------------------------------------------------------------------
-
-const API_BASE = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
 export function useCreateCheckoutSession() {
   return useMutation({
@@ -231,7 +229,7 @@ export function useCreateCheckoutSession() {
         bundle_name?: string;
       };
     }): Promise<{ url: string }> => {
-      const res = await fetch(`${API_BASE}/api/checkout/session`, {
+      const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

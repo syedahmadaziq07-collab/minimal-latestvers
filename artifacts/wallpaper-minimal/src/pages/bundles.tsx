@@ -49,7 +49,7 @@ export function Bundles() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto mb-16">
-          {/* Starter */}
+          {/* Starter Pack */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -59,7 +59,7 @@ export function Bundles() {
             <div className="text-center mb-8">
               <h3 className="text-2xl font-medium mb-2">Starter Pack</h3>
               <p className="text-muted-foreground text-sm mb-6">A taste of minimalism</p>
-              <div className="text-5xl font-serif italic mb-2">$12</div>
+              <div className="text-5xl font-serif italic mb-2">$9.99</div>
               <p className="text-sm text-muted-foreground">10 wallpapers</p>
             </div>
             
@@ -79,14 +79,15 @@ export function Bundles() {
             </ul>
 
             <button
-              onClick={() => handleCheckout("pack", 12, "Starter Pack", "Starter Pack")}
-              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px]"
+              onClick={() => handleCheckout("pack", 9.99, "Starter Pack", "Starter Pack")}
+              disabled={checkoutMutation.isPending}
+              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Get Starter Pack
+              {checkoutMutation.isPending ? "Loading…" : "Get Starter Pack"}
             </button>
           </motion.div>
 
-          {/* Cozy Pack */}
+          {/* Essential Set */}
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -98,9 +99,9 @@ export function Bundles() {
             </div>
             
             <div className="text-center mb-8">
-              <h3 className="text-3xl font-medium mb-2">Cozy Pack</h3>
+              <h3 className="text-3xl font-medium mb-2">Essential Set</h3>
               <p className="text-primary-foreground/70 text-sm mb-6">Our signature aesthetic</p>
-              <div className="text-6xl font-serif italic mb-2">$22</div>
+              <div className="text-6xl font-serif italic mb-2">$17.99</div>
               <p className="text-sm text-secondary">18 wallpapers</p>
             </div>
 
@@ -120,14 +121,15 @@ export function Bundles() {
             </ul>
 
             <button
-              onClick={() => handleCheckout("pack", 22, "Cozy Pack", "Cozy Pack")}
-              className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors mt-auto rounded-[2px]"
+              onClick={() => handleCheckout("pack", 17.99, "Essential Set", "Essential Set")}
+              disabled={checkoutMutation.isPending}
+              className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Get The Pack
+              {checkoutMutation.isPending ? "Loading…" : "Get Essential Set"}
             </button>
           </motion.div>
 
-          {/* All Access */}
+          {/* Full Collection */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -135,9 +137,9 @@ export function Bundles() {
             className="border border-border p-8 rounded-sm bg-card flex flex-col h-full"
           >
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-medium mb-2">All Access</h3>
+              <h3 className="text-2xl font-medium mb-2">Full Collection</h3>
               <p className="text-muted-foreground text-sm mb-6">The ultimate collection</p>
-              <div className="text-5xl font-serif italic mb-2">$45</div>
+              <div className="text-5xl font-serif italic mb-2">$29.99</div>
               <p className="text-sm text-muted-foreground">Unlimited wallpapers</p>
             </div>
 
@@ -157,10 +159,11 @@ export function Bundles() {
             </ul>
 
             <button
-              onClick={() => handleCheckout("bundle", 45, "All Access", "All Access")}
-              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px]"
+              onClick={() => handleCheckout("bundle", 29.99, "Full Collection", "Full Collection")}
+              disabled={checkoutMutation.isPending}
+              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Get All Access
+              {checkoutMutation.isPending ? "Loading…" : "Get Full Collection"}
             </button>
           </motion.div>
         </div>

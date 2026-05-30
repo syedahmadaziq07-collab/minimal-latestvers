@@ -112,9 +112,10 @@ export function Shop() {
                     onClick={() =>
                       handleCheckout("single", wallpaper.price, wallpaper.name, wallpaper.id)
                     }
-                    className="text-[10px] uppercase tracking-widest text-primary border-b border-primary pb-1 hover:text-secondary hover:border-secondary transition-colors"
+                    disabled={checkoutMutation.isPending}
+                    className="text-[10px] uppercase tracking-widest text-primary border-b border-primary pb-1 hover:text-secondary hover:border-secondary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Get This →
+                    {checkoutMutation.isPending ? "Loading…" : "Get This →"}
                   </button>
                 </div>
               </motion.div>
