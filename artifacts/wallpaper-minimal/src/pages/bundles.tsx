@@ -1,11 +1,27 @@
-import { useCreateCheckoutSession } from "@/lib/queries";
+import { useListBundles, getListBundlesQueryKey, useCreateCheckoutSession } from "@/lib/queries";
 import { toast } from "sonner";
 import { Check } from "lucide-react";
-import { Link } from "wouter";
 import { motion } from "framer-motion";
+
+const FALLBACK_BUNDLES = [
+  { name: "Starter Pack", description: "A taste of minimalism", price: 9.99, wallpaper_count: 10, is_popular: false, is_active: true },
+  { name: "Essential Set", description: "Our signature aesthetic", price: 17.99, wallpaper_count: 18, is_popular: true, is_active: true },
+  { name: "Full Collection", description: "The ultimate collection", price: 29.99, wallpaper_count: 999, is_popular: false, is_active: true },
+];
+
+const PERKS: Record<string, string[]> = {
+  "Starter Pack": ["10 curated aesthetic wallpapers", "4K resolution"],
+  "Essential Set": ["18 premium aesthetic wallpapers", "4K & OLED optimized", "Bonus: iPad versions included"],
+  "Full Collection": ["Every wallpaper currently in store", "All future drops included forever", "iPhone, iPad & Mac sizes"],
+};
 
 export function Bundles() {
   const checkoutMutation = useCreateCheckoutSession();
+  const { data: supabaseBundles, isLoading } = useListBundles({ query: { queryKey: getListBundlesQueryKey() } });
+
+  const bundles = (supabaseBundles ?? []).filter(b => b.is_active).length > 0
+    ? (supabaseBundles ?? []).filter(b => b.is_active)
+    : FALLBACK_BUNDLES;
 
   const handleCheckout = (
     type: "single" | "pack" | "bundle",
@@ -24,6 +40,12 @@ export function Bundles() {
         },
       }
     );
+  };
+
+  const getType = (bundle: typeof bundles[0]) => {
+    if (bundle.price >= 25) return "bundle" as const;
+    if (bundle.price >= 10) return "pack" as const;
+    return "single" as const;
   };
 
   return (
@@ -48,149 +70,77 @@ export function Bundles() {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto mb-16">
-          {/* Starter Pack */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="border border-border p-8 rounded-sm bg-card flex flex-col h-full"
-          >
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-medium mb-2">Starter Pack</h3>
-              <p className="text-muted-foreground text-sm mb-6">A taste of minimalism</p>
-              <div className="text-5xl font-serif italic mb-2">$9.99</div>
-              <p className="text-sm text-muted-foreground">10 wallpapers</p>
-            </div>
-            
-            <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-primary mt-0.5" />
-                <span>10 curated aesthetic wallpapers</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-primary mt-0.5" />
-                <span>4K resolution</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm text-muted-foreground">
-                <XIcon size={16} className="mt-0.5" />
-                <span>Future drops not included</span>
-              </li>
-            </ul>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-16">
+            {[1,2,3].map(i => (
+              <div key={i} className="animate-pulse border border-border p-8 rounded-sm bg-card h-[450px]" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start max-w-5xl mx-auto mb-16">
+            {bundles.map((bundle, i) => {
+              const isPopular = bundle.is_popular;
+              const type = getType(bundle);
+              const perks = PERKS[bundle.name] ?? [`${bundle.wallpaper_count} curated wallpapers`, "4K resolution"];
 
-            <button
-              onClick={() => handleCheckout("pack", 9.99, "Starter Pack", "Starter Pack")}
-              disabled={checkoutMutation.isPending}
-              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {checkoutMutation.isPending ? "Loading…" : "Get Starter Pack"}
-            </button>
-          </motion.div>
+              const CardWrapper = isPopular
+                ? motion.div
+                : motion.div;
+              const cardClass = isPopular
+                ? "border border-secondary p-10 rounded-sm bg-primary text-primary-foreground relative shadow-2xl flex flex-col z-10 md:scale-105"
+                : "border border-border p-8 rounded-sm bg-card flex flex-col";
 
-          {/* Essential Set */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="border border-secondary p-10 rounded-sm bg-primary text-primary-foreground relative shadow-2xl flex flex-col h-full min-h-[500px] z-10"
-          >
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-primary text-[10px] uppercase tracking-wider px-4 py-1.5 font-bold rounded-[2px]">
-              Most Popular
-            </div>
-            
-            <div className="text-center mb-8">
-              <h3 className="text-3xl font-medium mb-2">Essential Set</h3>
-              <p className="text-primary-foreground/70 text-sm mb-6">Our signature aesthetic</p>
-              <div className="text-6xl font-serif italic mb-2">$17.99</div>
-              <p className="text-sm text-secondary">18 wallpapers</p>
-            </div>
+              return (
+                <CardWrapper
+                  key={bundle.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 + i * 0.1 }}
+                  className={cardClass}
+                >
+                  {isPopular && (
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-primary text-[10px] uppercase tracking-wider px-4 py-1.5 font-bold rounded-[2px]">
+                      Most Popular
+                    </div>
+                  )}
+                  
+                  <div className="text-center mb-8">
+                    <h3 className={isPopular ? "text-3xl font-medium mb-2" : "text-2xl font-medium mb-2"}>{bundle.name}</h3>
+                    <p className={`text-sm mb-6 ${isPopular ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{bundle.description}</p>
+                    <div className={`${isPopular ? "text-6xl" : "text-5xl"} font-serif italic mb-2`}>${bundle.price}</div>
+                    <p className={`text-sm ${isPopular ? "text-secondary" : "text-muted-foreground"}`}>{bundle.wallpaper_count >= 100 ? "Unlimited wallpapers" : `${bundle.wallpaper_count} wallpapers`}</p>
+                  </div>
 
-            <ul className="space-y-4 mb-8 flex-1 text-primary-foreground/90">
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-secondary mt-0.5" />
-                <span>18 premium aesthetic wallpapers</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-secondary mt-0.5" />
-                <span>4K & OLED optimized</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-secondary mt-0.5" />
-                <span>Bonus: iPad versions included</span>
-              </li>
-            </ul>
+                  <ul className={`space-y-4 mb-8 flex-1 ${isPopular ? "text-primary-foreground/90" : ""}`}>
+                    {perks.map((perk) => (
+                      <li key={perk} className="flex items-start gap-3 text-sm">
+                        <Check size={16} className={`mt-0.5 ${isPopular ? "text-secondary" : "text-primary"}`} />
+                        <span>{perk}</span>
+                      </li>
+                    ))}
+                  </ul>
 
-            <button
-              onClick={() => handleCheckout("pack", 17.99, "Essential Set", "Essential Set")}
-              disabled={checkoutMutation.isPending}
-              className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {checkoutMutation.isPending ? "Loading…" : "Get Essential Set"}
-            </button>
-          </motion.div>
-
-          {/* Full Collection */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="border border-border p-8 rounded-sm bg-card flex flex-col h-full"
-          >
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-medium mb-2">Full Collection</h3>
-              <p className="text-muted-foreground text-sm mb-6">The ultimate collection</p>
-              <div className="text-5xl font-serif italic mb-2">$29.99</div>
-              <p className="text-sm text-muted-foreground">Unlimited wallpapers</p>
-            </div>
-
-            <ul className="space-y-4 mb-8 flex-1">
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-primary mt-0.5" />
-                <span>Every wallpaper currently in store</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-primary mt-0.5" />
-                <span>All future drops included forever</span>
-              </li>
-              <li className="flex items-start gap-3 text-sm">
-                <Check size={16} className="text-primary mt-0.5" />
-                <span>iPhone, iPad & Mac sizes</span>
-              </li>
-            </ul>
-
-            <button
-              onClick={() => handleCheckout("bundle", 29.99, "Full Collection", "Full Collection")}
-              disabled={checkoutMutation.isPending}
-              className="w-full py-4 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {checkoutMutation.isPending ? "Loading…" : "Get Full Collection"}
-            </button>
-          </motion.div>
-        </div>
+                  <button
+                    onClick={() => handleCheckout(type, bundle.price, bundle.name, bundle.name)}
+                    disabled={checkoutMutation.isPending}
+                    className={`w-full py-4 text-xs uppercase tracking-widest transition-colors mt-auto rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isPopular
+                        ? "bg-secondary text-primary font-medium hover:bg-[#b8a58d]"
+                        : "border border-primary hover:bg-primary hover:text-white"
+                    }`}
+                  >
+                    {checkoutMutation.isPending ? "Loading\u2026" : `Get ${bundle.name}`}
+                  </button>
+                </CardWrapper>
+              );
+            })}
+          </div>
+        )}
 
         <div className="text-center text-sm text-muted-foreground bg-muted p-6 rounded-sm max-w-2xl mx-auto">
           <p>Payments securely processed via Stripe. Download links are provided immediately after purchase and sent to your email.</p>
         </div>
       </div>
     </div>
-  );
-}
-
-function XIcon({ className, ...props }: { className?: string; size?: number }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width={props.size || 24} 
-      height={props.size || 24} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-    </svg>
   );
 }
