@@ -63,7 +63,7 @@ function DashboardTab() {
           <h3 className="font-serif italic text-xl mb-6" style={{ color: ADMIN_COLORS.text }}>Revenue by Type</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.revenue_by_type}>
+              <BarChart data={stats.revenue_by_type || []}>
                 <XAxis dataKey="type" stroke={ADMIN_COLORS.mocha} fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke={ADMIN_COLORS.mocha} fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
                 <Tooltip 
@@ -98,7 +98,7 @@ function DashboardTab() {
                     <td className="py-3">${(order.amount / 100).toFixed(2)}</td>
                   </tr>
                 ))}
-                {stats.recent_orders.length === 0 && (
+                {(stats.recent_orders || []).length === 0 && (
                   <tr><td colSpan={4} className="py-6 text-center" style={{ color: ADMIN_COLORS.mocha }}>No recent orders.</td></tr>
                 )}
               </tbody>
