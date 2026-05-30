@@ -1,10 +1,12 @@
 import { useListWallpapers, getListWallpapersQueryKey, useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 
 export function Shop() {
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const search = useSearch();
+  const initialCategory = new URLSearchParams(search).get("category") ?? "All";
+  const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
   const [, navigate] = useLocation();
 
   const { data: categoriesData } = useGetCategories({
