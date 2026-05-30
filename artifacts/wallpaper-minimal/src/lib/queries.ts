@@ -273,8 +273,9 @@ export function useCreateCheckoutSession() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error(`Checkout error: ${res.status}`);
-      return res.json();
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || `Checkout error: ${res.status}`);
+      return body;
     },
   });
 }
