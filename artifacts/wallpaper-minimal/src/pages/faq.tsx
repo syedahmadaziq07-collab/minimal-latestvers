@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const FAQ_DATA = [
   {
@@ -89,6 +90,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export function Faq() {
+  usePageMeta(
+    "FAQ — WALLPAPER.MINIMAL",
+    "Frequently asked questions about WALLPAPER.MINIMAL. Learn about our wallpapers, payment, delivery, and compatibility."
+  );
   return (
     <div className="min-h-screen bg-white pt-32 pb-24 px-6">
       <div className="max-w-2xl mx-auto">

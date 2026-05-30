@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGetWallpaper, getGetWallpaperQueryKey, useCreateCheckoutSession } from "@/lib/queries";
+import { useGetWallpaper, getGetWallpaperQueryKey, useCreateCheckoutSession, useListOrders, getListOrdersQueryKey } from "@/lib/queries";
 import { toast } from "sonner";
-import { ZoomIn, X, ChevronLeft, ChevronRight, ShieldCheck } from "lucide-react";
+import { ZoomIn, X, ChevronLeft, ChevronRight, ShieldCheck, Users } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const BADGES = [
   { label: "4K Resolution" },
@@ -20,6 +21,15 @@ export function WallpaperDetail() {
   });
 
   const checkoutMutation = useCreateCheckoutSession();
+
+  const { data: allOrders } = useListOrders({ query: { queryKey: getListOrdersQueryKey() } });
+  const purchaseCount = allOrders ? allOrders.filter(o => o.product === wallpaper?.name).length : 0;
+
+  usePageMeta(
+    wallpaper ? `${wallpaper.name} — WALLPAPER.MINIMAL` : "WALLPAPER.MINIMAL",
+    wallpaper ? `${wallpaper.name} — ${wallpaper.category} aesthetic iPhone wallpaper. ${Number(wallpaper.price).toFixed(2)}.` : undefined,
+    wallpaper?.image_url || undefined
+  );
 
   const allImages = wallpaper
     ? [wallpaper.image_url, ...(wallpaper.additional_images ?? []).filter(Boolean)]
@@ -207,6 +217,12 @@ export function WallpaperDetail() {
               <ShieldCheck size={13} />
               <span>Secure payment via Stripe</span>
             </div>
+            {purchaseCount > 0 && (
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9E8E78] mt-3">
+                <Users size={13} />
+                <span>{purchaseCount} customer{purchaseCount !== 1 ? "s" : ""} bought this</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

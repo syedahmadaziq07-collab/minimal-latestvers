@@ -2,6 +2,7 @@ import { useListBundles, getListBundlesQueryKey, useCreateCheckoutSession } from
 import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const FALLBACK_BUNDLES = [
   { name: "Starter Pack", description: "A taste of minimalism", price: 9.99, wallpaper_count: 10, is_popular: false, is_active: true },
@@ -16,6 +17,10 @@ const PERKS: Record<string, string[]> = {
 };
 
 export function Bundles() {
+  usePageMeta(
+    "Bundles — WALLPAPER.MINIMAL",
+    "Save with our wallpaper bundles. Get the Starter Pack, Essential Set, or the Full Collection with all future drops included."
+  );
   const checkoutMutation = useCreateCheckoutSession();
   const { data: supabaseBundles, isLoading } = useListBundles({ query: { queryKey: getListBundlesQueryKey() } });
 

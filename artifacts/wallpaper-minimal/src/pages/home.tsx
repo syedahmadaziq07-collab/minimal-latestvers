@@ -13,10 +13,22 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Check } from "lucide-react";
+import { Check, Star, Instagram } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
+
+const TESTIMONIALS = [
+  { name: "Sarah L.", text: "These wallpapers transformed my iPhone. Every drop is perfectly curated." },
+  { name: "Marcus K.", text: "The 4K quality is incredible. Details I never noticed before on my OLED screen." },
+  { name: "Emma R.", text: "I've been a subscriber for 3 months and every new set is better than the last." },
+  { name: "James T.", text: "Minimalist perfection. Exactly what my home screen needed." },
+];
 
 export function Home() {
   const [, navigate] = useLocation();
+  usePageMeta(
+    "WALLPAPER.MINIMAL — Curated Aesthetic Wallpapers",
+    "Curated aesthetic wallpapers for your iPhone. Minimalist, warm, and beautifully designed. New drops every week."
+  );
 
   const { data: drops } = useListWallpapers(
     { featured: true },
@@ -333,6 +345,82 @@ export function Home() {
           </div>
           <div className="text-center mt-12 text-sm text-muted-foreground">
             Secure checkout via Stripe · Instant download
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 px-6 bg-[#F7F5F2]">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-serif italic mb-4 text-[#1A1A1A]">Loved by Our Community</h2>
+            <p className="text-[#9E8E78]">Thousands of screens, beautifully dressed.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="bg-white p-6 rounded-sm border border-[#E8E2DA]"
+              >
+                <div className="flex gap-0.5 mb-3">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} size={13} className="fill-[#D4C5B0] text-[#D4C5B0]" />
+                  ))}
+                </div>
+                <p className="text-sm text-[#6B5E52] leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
+                <p className="text-xs uppercase tracking-widest text-[#9E8E78]">{t.name}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Instagram Feed */}
+      <section className="py-24 px-6 bg-white">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Instagram size={20} className="text-[#1A1A1A]" />
+              <h2 className="text-4xl font-serif italic text-[#1A1A1A]">Follow the Aesthetic</h2>
+            </div>
+            <p className="text-[#9E8E78] mb-6">See our latest drops and community reposts on Instagram.</p>
+            <a
+              href="https://instagram.com/wallpaper.minimal"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#1A1A1A] text-white text-[10px] uppercase tracking-[3px] hover:bg-black/80 transition-colors"
+            >
+              <Instagram size={14} />
+              Follow @wallpaper.minimal
+            </a>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            {(drops || []).slice(0, 8).map((wp, i) => (
+              <motion.a
+                key={wp.id}
+                href={`/wallpaper/${wp.id}`}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
+                className="group relative aspect-square overflow-hidden bg-[#F7F5F2]"
+              >
+                <img
+                  src={wp.image_url}
+                  alt={wp.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                  <span className="text-white/0 group-hover:text-white/90 text-[10px] uppercase tracking-widest transition-colors">
+                    {wp.name}
+                  </span>
+                </div>
+              </motion.a>
+            ))}
           </div>
         </div>
       </section>

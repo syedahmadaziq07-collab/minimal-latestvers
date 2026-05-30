@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { usePageMeta } from "@/lib/usePageMeta";
 import { 
   useListWallpapers, useCreateWallpaper, useUpdateWallpaper, useDeleteWallpaper, getListWallpapersQueryKey,
   useListOrders, useUpdateOrder, useDeleteOrder, getListOrdersQueryKey,
@@ -959,6 +960,7 @@ function SettingsTab() {
 // ---------------------------------------------------------------------------
 
 export function Admin() {
+  usePageMeta("Admin — WALLPAPER.MINIMAL");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [activeTab, setActiveTab] = useState("dashboard");

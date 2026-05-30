@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Check, Package, Zap, Download } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 const OFFERS = [
   { icon: Check, label: "Handpicked aesthetic wallpapers" },
@@ -11,6 +12,10 @@ const OFFERS = [
 ];
 
 export function About() {
+  usePageMeta(
+    "About — WALLPAPER.MINIMAL",
+    "Learn about WALLPAPER.MINIMAL — curated aesthetic wallpapers for your iPhone. Born from a love of clean, beautiful design."
+  );
   const contactEmail = import.meta.env.VITE_CONTACT_EMAIL as string | undefined;
 
   const [form, setForm] = useState({ name: "", email: "", message: "" });

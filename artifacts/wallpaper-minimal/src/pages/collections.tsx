@@ -1,8 +1,13 @@
 import { useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export function Collections() {
+  usePageMeta(
+    "Mood Collections — WALLPAPER.MINIMAL",
+    "Browse our curated mood collections: Minimalist, Japan, Nature, Pastel, Cozy, Architecture. Find the perfect aesthetic for your screen."
+  );
   const { data: categories, isLoading } = useGetCategories({
     query: { queryKey: getGetCategoriesQueryKey() }
   });

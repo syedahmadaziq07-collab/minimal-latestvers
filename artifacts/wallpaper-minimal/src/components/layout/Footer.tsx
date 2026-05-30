@@ -36,9 +36,9 @@ export function Footer() {
         <div>
           <h4 className="text-[11px] uppercase tracking-[3px] mb-6 text-primary-foreground/50">Follow</h4>
           <ul className="space-y-4 text-sm">
-            <li><a href="#" className="hover:text-secondary transition-colors">Instagram</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">TikTok</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">Pinterest</a></li>
+            <li><a href="https://instagram.com/wallpaper.minimal" target="_blank" rel="noopener noreferrer" className="hover:text-secondary transition-colors">Instagram</a></li>
+            <li><a href="https://tiktok.com/@wallpaper.minimal" target="_blank" rel="noopener noreferrer" className="hover:text-secondary transition-colors">TikTok</a></li>
+            <li><a href="https://pinterest.com/wallpaperminimal" target="_blank" rel="noopener noreferrer" className="hover:text-secondary transition-colors">Pinterest</a></li>
           </ul>
         </div>
       </div>

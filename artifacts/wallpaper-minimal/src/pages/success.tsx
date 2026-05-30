@@ -1,8 +1,10 @@
 import { Link } from "wouter";
 import { CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export function Success() {
+  usePageMeta("Payment Successful — WALLPAPER.MINIMAL", "Your payment was successful! Check your email for your wallpaper download link.");
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-6">
       <motion.div

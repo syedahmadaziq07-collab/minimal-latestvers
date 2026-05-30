@@ -2,8 +2,13 @@ import { useListWallpapers, getListWallpapersQueryKey, useGetCategories, getGetC
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useSearch } from "wouter";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 export function Shop() {
+  usePageMeta(
+    "Shop All Wallpapers — WALLPAPER.MINIMAL",
+    "Browse our collection of curated aesthetic iPhone wallpapers. Minimalist designs, 4K resolution, new drops every week."
+  );
   const search = useSearch();
   const initialCategory = new URLSearchParams(search).get("category") ?? "All";
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
