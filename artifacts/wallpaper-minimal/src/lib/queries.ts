@@ -91,6 +91,8 @@ export const getListWallpapersQueryKey = (
 
 export const getGetCategoriesQueryKey = () => ["categories"] as const;
 
+export const getGetStylesQueryKey = () => ["styles"] as const;
+
 export const getListOrdersQueryKey = () => ["orders"] as const;
 
 export const getGetOrderStatsQueryKey = () => ["order-stats"] as const;
@@ -184,6 +186,28 @@ export function useGetCategories(options?: {
         counts[row.category] = (counts[row.category] ?? 0) + 1;
       }
       return Object.entries(counts).map(([category, count]) => ({ category, count }));
+    },
+    ...options?.query,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Styles (derived from wallpapers table, unique non-null style values)
+// ---------------------------------------------------------------------------
+
+export function useGetStyles(options?: {
+  query?: Partial<UseQueryOptions<string[]>>;
+}) {
+  return useQuery<string[]>({
+    queryKey: getGetStylesQueryKey(),
+    queryFn: async () => {
+      const { data, error } = await db().from("wallpapers").select("style");
+      if (error) throw error;
+      const seen = new Set<string>();
+      for (const row of data ?? []) {
+        if (row.style) seen.add(row.style);
+      }
+      return Array.from(seen).sort();
     },
     ...options?.query,
   });

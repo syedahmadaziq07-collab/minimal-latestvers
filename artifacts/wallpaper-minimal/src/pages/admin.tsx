@@ -5,7 +5,8 @@ import {
   useGetOrderStats, getGetOrderStatsQueryKey,
   useListBundles, useCreateBundle, useUpdateBundle, useDeleteBundle, getListBundlesQueryKey,
   useListPromos, useCreatePromo, useUpdatePromo, useDeletePromo, getListPromosQueryKey,
-  useGetSettings, useSaveSettings, getGetSettingsQueryKey
+  useGetSettings, useSaveSettings, getGetSettingsQueryKey,
+  useGetStyles, getGetStylesQueryKey
 } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
@@ -120,7 +121,8 @@ function DashboardTab() {
 function WallpapersTab() {
   const queryClient = useQueryClient();
   const { data: wallpapers, isLoading } = useListWallpapers({}, { query: { queryKey: getListWallpapersQueryKey() } });
-  
+  const { data: existingStyles } = useGetStyles({ query: { queryKey: getGetStylesQueryKey() } });
+
   const createMutation = useCreateWallpaper();
   const updateMutation = useUpdateWallpaper();
   const deleteMutation = useDeleteWallpaper();
@@ -306,18 +308,21 @@ function WallpapersTab() {
           <div>
             <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Style (Type)</label>
             <input 
-              type="text" value={formData.style} onChange={e => setFormData({...formData, style: e.target.value})}
-              placeholder="e.g. Minimalist, Aesthetic, Anime, Abstract"
+              type="text" list="styles-datalist" value={formData.style} onChange={e => setFormData({...formData, style: e.target.value})}
+              placeholder="e.g. Minimalist, Aesthetic, Anime"
               className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
               style={{ borderColor: ADMIN_COLORS.border }}
             />
+            <datalist id="styles-datalist">
+              {(existingStyles ?? []).map(s => <option key={s} value={s} />)}
+            </datalist>
           </div>
 
           <div>
             <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Google Drive Link</label>
             <input 
-              type="url" value={formData.drive_url} onChange={e => setFormData({...formData, drive_url: e.target.value})}
-              placeholder="https://drive.google.com/..."
+              type="text" value={formData.drive_url} onChange={e => setFormData({...formData, drive_url: e.target.value})}
+              placeholder="Paste Google Drive share link here"
               className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
               style={{ borderColor: ADMIN_COLORS.border }}
             />
