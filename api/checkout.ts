@@ -7,7 +7,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  const siteUrl = process.env.SITE_URL || 'http://localhost:3000';
+  const siteUrl = process.env.SITE_URL || 'https://minimal-latestvers.vercel.app';
 
   if (!secretKey) {
     return res.status(503).json({ error: 'Payment not configured' });
@@ -15,29 +15,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { name, price, type } = req.body ?? {};
 
-  if (!name || !price || !type) {
-    return res.status(400).json({ error: 'Missing required fields: name, price, type' });
+  if (!name || !price) {
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const descriptions: Record<string, string> = {
-    single: 'Instant digital download — 4K wallpaper',
-    pack: 'Wallpaper bundle — instant digital download',
-    full_access: 'Full access — all wallpapers + future drops',
-  };
-
-  const stripe = new Stripe(secretKey, { apiVersion: '2025-11-27.acacia' as any });
-
   try {
+    const stripe = new Stripe(secretKey);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
             currency: 'usd',
-            product_data: {
-              name,
-              description: descriptions[type] ?? name,
-            },
+            product_data: { name },
             unit_amount: Math.round(Number(price) * 100),
           },
           quantity: 1,
@@ -49,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     return res.status(200).json({ url: session.url });
   } catch (err: any) {
-    console.error(err);
+    console.error('Stripe error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 }
