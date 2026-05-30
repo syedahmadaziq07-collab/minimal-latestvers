@@ -22,8 +22,10 @@ export interface Wallpaper {
   id: string;
   name: string;
   category: string;
+  style: string | null;
   price: number;
   image_url: string;
+  drive_url: string | null;
   featured: boolean;
   created_at: string;
 }

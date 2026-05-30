@@ -126,7 +126,7 @@ function WallpapersTab() {
   const deleteMutation = useDeleteWallpaper();
 
   const [formData, setFormData] = useState({
-    name: "", category: "", price: 4, image_url: "", featured: false
+    name: "", category: "", style: "", price: 4, image_url: "", drive_url: "", featured: false
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -134,7 +134,7 @@ function WallpapersTab() {
   const [uploading, setUploading] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", price: 4, image_url: "", featured: false });
+    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", drive_url: "", featured: false });
     setEditingId(null);
     setPreviewUrl(null);
   };
@@ -294,15 +294,33 @@ function WallpapersTab() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Category</label>
+            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Category (Theme)</label>
             <input 
-              type="text" required list="categories-datalist" value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
+              type="text" required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})}
+              placeholder="e.g. Japan, Nature, Dark, Cozy, Aesthetic"
               className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
               style={{ borderColor: ADMIN_COLORS.border }}
             />
-            <datalist id="categories-datalist">
-              {['Minimalist', 'Japan', 'Cozy', 'Nature', 'Pastel', 'Anime', 'Sunset', 'Architecture', 'Couple', 'Calm', 'Aesthetic'].map(c => <option key={c} value={c} />)}
-            </datalist>
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Style (Type)</label>
+            <input 
+              type="text" value={formData.style} onChange={e => setFormData({...formData, style: e.target.value})}
+              placeholder="e.g. Minimalist, Aesthetic, Anime, Abstract"
+              className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
+              style={{ borderColor: ADMIN_COLORS.border }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Google Drive Link</label>
+            <input 
+              type="url" value={formData.drive_url} onChange={e => setFormData({...formData, drive_url: e.target.value})}
+              placeholder="https://drive.google.com/..."
+              className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
+              style={{ borderColor: ADMIN_COLORS.border }}
+            />
           </div>
 
           <div>
@@ -362,7 +380,7 @@ function WallpapersTab() {
                     <div className="absolute top-2 left-2 bg-black text-white text-[9px] uppercase tracking-wider px-2 py-0.5">Featured</div>
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, price: wp.price, image_url: wp.image_url, featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, drive_url: wp.drive_url ?? "", featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
                     <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">

@@ -6,8 +6,10 @@ export const wallpapersTable = pgTable("wallpapers", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   category: text("category").notNull(),
+  style: text("style"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("4.00"),
   image_url: text("image_url").notNull(),
+  drive_url: text("drive_url"),
   featured: boolean("featured").notNull().default(false),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
