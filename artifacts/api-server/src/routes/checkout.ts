@@ -22,7 +22,7 @@ function getBaseUrl(): string {
 
 router.post("/checkout", async (req, res) => {
   try {
-    const { name, price, type } = req.body ?? {};
+    const { name, price, type, wallpaper_id, wallpaper_name } = req.body ?? {};
     if (!name || price == null || !type) {
       res.status(400).json({ error: "Missing required fields: name, price, type" });
       return;
@@ -60,6 +60,11 @@ router.post("/checkout", async (req, res) => {
       mode: "payment",
       success_url: `${baseUrl}/success`,
       cancel_url: `${baseUrl}/`,
+      metadata: {
+        wallpaper_id: wallpaper_id ?? "",
+        wallpaper_name: wallpaper_name ?? name,
+        product_type: type,
+      },
     });
 
     res.json({ url: session.url });
