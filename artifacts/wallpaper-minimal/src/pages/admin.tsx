@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   useListWallpapers, useCreateWallpaper, useUpdateWallpaper, useDeleteWallpaper, getListWallpapersQueryKey,
   useListOrders, useUpdateOrder, useDeleteOrder, getListOrdersQueryKey,
@@ -7,11 +7,12 @@ import {
   useListPromos, useCreatePromo, useUpdatePromo, useDeletePromo, getListPromosQueryKey,
   useGetSettings, useSaveSettings, getGetSettingsQueryKey
 } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
   LayoutDashboard, Image as ImageIcon, ShoppingBag, Package, Tag, Settings, LogOut, 
-  Trash2, Edit2, Plus, UploadCloud, ChevronDown, Check, X, AlertCircle
+  Trash2, Edit2, Plus, UploadCloud, Loader2
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -25,7 +26,9 @@ const ADMIN_COLORS = {
   border: "#E8E4DF"
 };
 
-// --- TABS COMPONENTS ---
+// ---------------------------------------------------------------------------
+// Dashboard Tab
+// ---------------------------------------------------------------------------
 
 function DashboardTab() {
   const { data: stats, isLoading } = useGetOrderStats({ query: { queryKey: getGetOrderStatsQueryKey() } });
@@ -60,7 +63,7 @@ function DashboardTab() {
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="p-6 rounded-sm border" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
-          <h3 className="font-serif italic text-xl mb-6" style={{ color: ADMIN_COLORS.text }}>Revenue by Type</h3>
+          <h3 className="font-serif italic text-xl mb-6" style={{ color: ADMIN_COLORS.text }}>Revenue by Product</h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.revenue_by_type || []}>
@@ -90,12 +93,12 @@ function DashboardTab() {
                 </tr>
               </thead>
               <tbody>
-                {(stats.recent_orders || []).map((order: any, i: number) => (
+                {(stats.recent_orders || []).map((order, i) => (
                   <tr key={i} className="border-b last:border-0" style={{ borderColor: ADMIN_COLORS.border }}>
                     <td className="py-3">{new Date(order.created_at).toLocaleDateString()}</td>
                     <td className="py-3 truncate max-w-[120px]">{order.customer_email}</td>
-                    <td className="py-3 capitalize">{order.type}</td>
-                    <td className="py-3">${(order.amount / 100).toFixed(2)}</td>
+                    <td className="py-3 capitalize">{order.product}</td>
+                    <td className="py-3">${Number(order.amount).toFixed(2)}</td>
                   </tr>
                 ))}
                 {(stats.recent_orders || []).length === 0 && (
@@ -109,6 +112,10 @@ function DashboardTab() {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Wallpapers Tab — with Supabase Storage upload
+// ---------------------------------------------------------------------------
 
 function WallpapersTab() {
   const queryClient = useQueryClient();
@@ -124,6 +131,7 @@ function WallpapersTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const resetForm = () => {
     setFormData({ name: "", category: "", price: 4, image_url: "", featured: false });
@@ -143,69 +151,138 @@ function WallpapersTab() {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
+      uploadToStorage(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreviewUrl(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+  const uploadToStorage = async (file: File) => {
+    if (!supabase) {
+      toast.error("Supabase not configured — set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY");
+      return;
+    }
+
+    setPreviewUrl(URL.createObjectURL(file));
+    setUploading(true);
+
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("wallpapers")
+        .upload(fileName, file, { upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from("wallpapers")
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, image_url: publicData.publicUrl }));
+      toast.success("Image uploaded to Supabase Storage");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message ?? "Unknown error"}`);
+      setPreviewUrl(null);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const action = editingId 
-      ? updateMutation.mutate({ id: editingId, data: formData }, {
-          onSuccess: () => {
-            toast.success("Wallpaper updated");
-            queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
-            resetForm();
-          }
-        })
-      : createMutation.mutate({ data: formData }, {
-          onSuccess: () => {
-            toast.success("Wallpaper created");
-            queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
-            resetForm();
-          }
-        });
+    if (!formData.image_url) {
+      toast.error("Please upload an image first");
+      return;
+    }
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: formData }, {
+        onSuccess: () => {
+          toast.success("Wallpaper updated");
+          queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
+          resetForm();
+        },
+        onError: (err: any) => toast.error(`Failed to update: ${err.message}`)
+      });
+    } else {
+      createMutation.mutate({ data: formData }, {
+        onSuccess: () => {
+          toast.success("Wallpaper saved");
+          queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
+          resetForm();
+        },
+        onError: (err: any) => toast.error(`Failed to save: ${err.message}`)
+      });
+    }
   };
 
-  const toggleFeatured = (wp: any) => {
+  const toggleFeatured = (wp: { id: string; featured: boolean }) => {
     updateMutation.mutate({ id: wp.id, data: { featured: !wp.featured } }, {
       onSuccess: () => {
-        toast.success(`Wallpaper ${!wp.featured ? 'featured' : 'unfeatured'}`);
+        toast.success(`${!wp.featured ? 'Featured' : 'Unfeatured'}`);
         queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
-      }
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
     });
   };
 
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete this wallpaper?")) return;
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        toast.success("Wallpaper deleted");
+        queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed to delete: ${err.message}`)
+    });
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending || uploading;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      {/* Upload Form */}
       <div className="lg:col-span-1 p-6 rounded-sm border sticky top-8" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
         <h3 className="font-serif italic text-2xl mb-6" style={{ color: ADMIN_COLORS.text }}>
           {editingId ? 'Edit Wallpaper' : 'Upload Wallpaper'}
         </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           
+          {/* Supabase Storage Upload */}
           <div 
             className={`border-2 border-dashed p-6 text-center rounded-sm transition-colors cursor-pointer ${dragActive ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}
             onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
-            onClick={() => document.getElementById('file-upload')?.click()}
+            onClick={() => !uploading && document.getElementById('file-upload')?.click()}
           >
-            <input type="file" id="file-upload" className="hidden" accept="image/*" onChange={(e) => e.target.files && handleFile(e.target.files[0])} />
-            {previewUrl ? (
-              <img src={previewUrl} alt="Preview" className="mx-auto h-32 object-cover rounded-sm shadow-sm" />
+            <input 
+              type="file" id="file-upload" className="hidden" accept="image/*" 
+              onChange={(e) => e.target.files && uploadToStorage(e.target.files[0])} 
+            />
+            {uploading ? (
+              <div className="flex flex-col items-center gap-2">
+                <Loader2 size={24} className="animate-spin" style={{ color: ADMIN_COLORS.mocha }} />
+                <p className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Uploading to Supabase...</p>
+              </div>
+            ) : previewUrl ? (
+              <div className="space-y-2">
+                <img src={previewUrl} alt="Preview" className="mx-auto h-32 object-cover rounded-sm shadow-sm" />
+                <p className="text-[10px] uppercase tracking-widest" style={{ color: ADMIN_COLORS.mocha }}>
+                  {formData.image_url ? "✓ Uploaded" : "Click to change"}
+                </p>
+              </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <UploadCloud size={24} style={{ color: ADMIN_COLORS.mocha }} />
-                <p className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Drag & drop image here</p>
+                <p className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Drag & drop or click to upload</p>
+                <p className="text-[10px]" style={{ color: ADMIN_COLORS.mocha }}>Uploads to Supabase Storage</p>
               </div>
             )}
           </div>
+
+          {formData.image_url && (
+            <p className="text-[10px] break-all" style={{ color: ADMIN_COLORS.mocha }}>
+              URL: {formData.image_url.slice(0, 60)}…
+            </p>
+          )}
 
           <div>
             <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Name</label>
@@ -237,23 +314,19 @@ function WallpapersTab() {
             />
           </div>
 
-          <div>
-            <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>External URL (Actual source)</label>
-            <input 
-              type="url" required value={formData.image_url} onChange={e => setFormData({...formData, image_url: e.target.value})} placeholder="https://..."
-              className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
-              style={{ borderColor: ADMIN_COLORS.border }}
-            />
-          </div>
-
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={formData.featured} onCheckedChange={(v) => setFormData({...formData, featured: v})} />
             <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Featured Wallpaper</span>
           </div>
 
           <div className="pt-4 flex gap-3">
-            <button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="flex-1 py-3 text-xs uppercase tracking-widest text-white bg-black hover:bg-black/80 transition-colors">
-              {editingId ? 'Update' : 'Save'}
+            <button 
+              type="submit" 
+              disabled={isPending} 
+              className="flex-1 py-3 text-xs uppercase tracking-widest text-white bg-black hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isPending && <Loader2 size={14} className="animate-spin" />}
+              {editingId ? 'Update' : 'Save Wallpaper'}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="px-4 border text-xs uppercase tracking-widest transition-colors hover:bg-black/5" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.text }}>
@@ -264,10 +337,16 @@ function WallpapersTab() {
         </form>
       </div>
 
+      {/* Wallpaper Grid */}
       <div className="lg:col-span-2">
         {isLoading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {[1,2,3,4,5,6].map(i => <div key={i} className="aspect-[9/16] animate-pulse rounded-sm" style={{ backgroundColor: ADMIN_COLORS.card }} />)}
+          </div>
+        ) : (wallpapers ?? []).length === 0 ? (
+          <div className="p-12 text-center" style={{ color: ADMIN_COLORS.mocha }}>
+            <ImageIcon className="mx-auto mb-4 opacity-30" size={32} />
+            <p>No wallpapers yet. Upload your first one.</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -286,13 +365,7 @@ function WallpapersTab() {
                     <button onClick={() => { setFormData(wp as any); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
-                    <button onClick={() => {
-                      if(confirm("Delete this wallpaper?")) {
-                        deleteMutation.mutate({ id: wp.id }, {
-                          onSuccess: () => { toast.success("Deleted"); queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() }); }
-                        });
-                      }
-                    }} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -313,6 +386,10 @@ function WallpapersTab() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Orders Tab
+// ---------------------------------------------------------------------------
+
 function OrdersTab() {
   const queryClient = useQueryClient();
   const { data: orders, isLoading } = useListOrders({ query: { queryKey: getListOrdersQueryKey() } });
@@ -324,21 +401,28 @@ function OrdersTab() {
 
   const handleStatus = (id: string, status: string) => {
     updateMutation.mutate({ id, data: { status } }, {
-      onSuccess: () => { toast.success("Order status updated"); queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() }); }
+      onSuccess: () => {
+        toast.success("Order status updated");
+        queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
     });
   };
 
   const handleDelete = (id: string) => {
-    if (confirm("Delete this order?")) {
-      deleteMutation.mutate({ id }, {
-        onSuccess: () => { toast.success("Order deleted"); queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() }); }
-      });
-    }
+    if (!confirm("Delete this order?")) return;
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        toast.success("Order deleted");
+        queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
+    });
   };
 
   return (
     <div className="rounded-sm border overflow-hidden" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
-      {orders?.length === 0 ? (
+      {(orders ?? []).length === 0 ? (
         <div className="p-12 text-center" style={{ color: ADMIN_COLORS.mocha }}>
           <ShoppingBag className="mx-auto mb-4 opacity-50" size={32} />
           <p>No orders yet. Orders from Stripe checkout will appear here.</p>
@@ -350,9 +434,7 @@ function OrdersTab() {
               <th className="px-4 py-3 font-normal">Date</th>
               <th className="px-4 py-3 font-normal">Customer</th>
               <th className="px-4 py-3 font-normal">Product</th>
-              <th className="px-4 py-3 font-normal">Type</th>
               <th className="px-4 py-3 font-normal">Amount</th>
-              <th className="px-4 py-3 font-normal">Promo</th>
               <th className="px-4 py-3 font-normal">Status</th>
               <th className="px-4 py-3 font-normal text-right">Actions</th>
             </tr>
@@ -362,13 +444,9 @@ function OrdersTab() {
               <React.Fragment key={order.id}>
                 <tr className="border-b last:border-0 hover:bg-black/5 cursor-pointer transition-colors" style={{ borderColor: ADMIN_COLORS.border }} onClick={() => setExpandedId(expandedId === order.id ? null : order.id)}>
                   <td className="px-4 py-3">{new Date(order.created_at).toLocaleDateString()}</td>
-                  <td className="px-4 py-3">{order.customer_email}</td>
-                  <td className="px-4 py-3">{order.product_name}</td>
-                  <td className="px-4 py-3 capitalize">{order.product_type}</td>
-                  <td className="px-4 py-3">${Number(order.price).toFixed(2)}</td>
-                  <td className="px-4 py-3">
-                    {order.promo_code ? <span className="px-2 py-0.5 bg-black/10 rounded font-mono text-xs">{order.promo_code}</span> : '-'}
-                  </td>
+                  <td className="px-4 py-3 truncate max-w-[140px]">{order.customer_email}</td>
+                  <td className="px-4 py-3 capitalize">{order.product}</td>
+                  <td className="px-4 py-3">${Number(order.amount).toFixed(2)}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider ${
                       order.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -393,9 +471,8 @@ function OrdersTab() {
                 </tr>
                 {expandedId === order.id && (
                   <tr className="bg-black/5 border-b" style={{ borderColor: ADMIN_COLORS.border }}>
-                    <td colSpan={8} className="px-4 py-4 space-y-2 text-xs" style={{ color: ADMIN_COLORS.mocha }}>
+                    <td colSpan={6} className="px-4 py-4 space-y-2 text-xs" style={{ color: ADMIN_COLORS.mocha }}>
                       <p><strong>Order ID:</strong> {order.id}</p>
-                      {order.stripe_session_id && <p><strong>Stripe Session:</strong> <span className="font-mono">{order.stripe_session_id}</span></p>}
                       <p><strong>Full Date:</strong> {new Date(order.created_at).toLocaleString()}</p>
                     </td>
                   </tr>
@@ -409,6 +486,10 @@ function OrdersTab() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Bundles Tab  (columns: is_popular, is_active)
+// ---------------------------------------------------------------------------
+
 function BundlesTab() {
   const queryClient = useQueryClient();
   const { data: bundles, isLoading } = useListBundles({ query: { queryKey: getListBundlesQueryKey() } });
@@ -416,7 +497,8 @@ function BundlesTab() {
   const updateMutation = useUpdateBundle();
   const deleteMutation = useDeleteBundle();
 
-  const [formData, setFormData] = useState({ name: "", description: "", wallpaper_count: 5, price: 15, popular: false, active: true });
+  const emptyForm = { name: "", description: "", wallpaper_count: 5, price: 15, is_popular: false, is_active: true };
+  const [formData, setFormData] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -426,44 +508,67 @@ function BundlesTab() {
         onSuccess: () => {
           toast.success("Bundle updated");
           queryClient.invalidateQueries({ queryKey: getListBundlesQueryKey() });
-          setEditingId(null); setFormData({ name: "", description: "", wallpaper_count: 5, price: 15, popular: false, active: true });
-        }
+          setEditingId(null); setFormData(emptyForm);
+        },
+        onError: (err: any) => toast.error(`Failed: ${err.message}`)
       });
     } else {
       createMutation.mutate({ data: formData }, {
         onSuccess: () => {
           toast.success("Bundle created");
           queryClient.invalidateQueries({ queryKey: getListBundlesQueryKey() });
-          setFormData({ name: "", description: "", wallpaper_count: 5, price: 15, popular: false, active: true });
-        }
+          setFormData(emptyForm);
+        },
+        onError: (err: any) => toast.error(`Failed: ${err.message}`)
       });
     }
   };
 
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete bundle?")) return;
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        toast.success("Bundle deleted");
+        queryClient.invalidateQueries({ queryKey: getListBundlesQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
+    });
+  };
+
+  const isPending = createMutation.isPending || updateMutation.isPending;
+
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {bundles?.map(bundle => (
-          <div key={bundle.id} className="p-6 rounded-sm border relative" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
-            {!bundle.active && <div className="absolute top-0 right-0 bg-black/10 text-xs px-2 py-1 rounded-bl">Inactive</div>}
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="font-serif text-xl italic" style={{ color: ADMIN_COLORS.text }}>{bundle.name}</h4>
-              <span className="text-lg">${bundle.price}</span>
+      {isLoading ? (
+        <div className="p-8 text-center" style={{ color: ADMIN_COLORS.mocha }}>Loading bundles...</div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {bundles?.map(bundle => (
+            <div key={bundle.id} className="p-6 rounded-sm border relative" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
+              {!bundle.is_active && <div className="absolute top-0 right-0 bg-black/10 text-xs px-2 py-1 rounded-bl">Inactive</div>}
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-serif text-xl italic" style={{ color: ADMIN_COLORS.text }}>{bundle.name}</h4>
+                <span className="text-lg">${bundle.price}</span>
+              </div>
+              <p className="text-sm mb-4" style={{ color: ADMIN_COLORS.mocha }}>{bundle.description}</p>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className="px-2 py-1 text-xs border rounded-full" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.text }}>{bundle.wallpaper_count} Wallpapers</span>
+                {bundle.is_popular && <span className="px-2 py-1 text-xs bg-[#D4C5B0] text-black rounded-full">Popular</span>}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setFormData({ name: bundle.name, description: bundle.description, wallpaper_count: bundle.wallpaper_count, price: bundle.price, is_popular: bundle.is_popular, is_active: bundle.is_active }); setEditingId(bundle.id); }} className="px-3 py-1.5 text-xs bg-black text-white hover:bg-black/80 transition-colors uppercase tracking-wider rounded-sm">Edit</button>
+                <button onClick={() => handleDelete(bundle.id)} className="px-3 py-1.5 text-xs border text-red-600 hover:bg-red-50 transition-colors uppercase tracking-wider rounded-sm" style={{ borderColor: ADMIN_COLORS.border }}>Delete</button>
+              </div>
             </div>
-            <p className="text-sm mb-4" style={{ color: ADMIN_COLORS.mocha }}>{bundle.description}</p>
-            <div className="flex flex-wrap gap-2 mb-6">
-              <span className="px-2 py-1 text-xs border rounded-full" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.text }}>{bundle.wallpaper_count} Wallpapers</span>
-              {bundle.popular && <span className="px-2 py-1 text-xs bg-[#D4C5B0] text-black rounded-full">Popular</span>}
+          ))}
+          {(bundles ?? []).length === 0 && (
+            <div className="col-span-3 p-12 text-center" style={{ color: ADMIN_COLORS.mocha }}>
+              <Package className="mx-auto mb-4 opacity-30" size={32} />
+              <p>No bundles yet. Create your first one below.</p>
             </div>
-            <div className="flex gap-2">
-              <button onClick={() => { setFormData(bundle as any); setEditingId(bundle.id); }} className="px-3 py-1.5 text-xs bg-black text-white hover:bg-black/80 transition-colors uppercase tracking-wider rounded-sm">Edit</button>
-              <button onClick={() => {
-                if(confirm("Delete bundle?")) deleteMutation.mutate({ id: bundle.id }, { onSuccess: () => { toast.success("Deleted"); queryClient.invalidateQueries({ queryKey: getListBundlesQueryKey() }); }});
-              }} className="px-3 py-1.5 text-xs border text-red-600 hover:bg-red-50 transition-colors uppercase tracking-wider rounded-sm" style={{ borderColor: ADMIN_COLORS.border }}>Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="p-6 border rounded-sm max-w-xl" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
         <h3 className="font-serif text-xl mb-4 italic" style={{ color: ADMIN_COLORS.text }}>{editingId ? 'Edit Bundle' : 'Add New Bundle'}</h3>
@@ -482,25 +587,32 @@ function BundlesTab() {
               <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Count</label>
+              <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Wallpaper Count</label>
               <input type="number" required value={formData.wallpaper_count} onChange={e => setFormData({...formData, wallpaper_count: parseInt(e.target.value)})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <Switch checked={formData.popular} onCheckedChange={v => setFormData({...formData, popular: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Popular</span>
+              <Switch checked={formData.is_popular} onCheckedChange={v => setFormData({...formData, is_popular: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Popular</span>
             </div>
             <div className="flex items-center gap-2 pt-2">
-              <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Active</span>
+              <Switch checked={formData.is_active} onCheckedChange={v => setFormData({...formData, is_active: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Active</span>
             </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <button type="submit" className="py-2 px-6 bg-black text-white text-xs uppercase tracking-widest">{editingId ? 'Update' : 'Create'}</button>
-            {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData({ name: "", description: "", wallpaper_count: 5, price: 15, popular: false, active: true }); }} className="py-2 px-6 border text-black text-xs uppercase tracking-widest" style={{ borderColor: ADMIN_COLORS.border }}>Cancel</button>}
+            <button type="submit" disabled={isPending} className="py-2 px-6 bg-black text-white text-xs uppercase tracking-widest disabled:opacity-50 flex items-center gap-2">
+              {isPending && <Loader2 size={12} className="animate-spin" />}
+              {editingId ? 'Update' : 'Create'}
+            </button>
+            {editingId && <button type="button" onClick={() => { setEditingId(null); setFormData(emptyForm); }} className="py-2 px-6 border text-black text-xs uppercase tracking-widest" style={{ borderColor: ADMIN_COLORS.border }}>Cancel</button>}
           </div>
         </form>
       </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Promos Tab  (column: is_active)
+// ---------------------------------------------------------------------------
 
 function PromosTab() {
   const queryClient = useQueryClient();
@@ -509,7 +621,8 @@ function PromosTab() {
   const updateMutation = useUpdatePromo();
   const deleteMutation = useDeletePromo();
 
-  const [formData, setFormData] = useState({ code: "", discount_type: "percent", discount_value: 10, max_uses: "", expires_at: "", active: true });
+  const emptyForm = { code: "", discount_type: "percent", discount_value: 10, max_uses: "", expires_at: "", is_active: true };
+  const [formData, setFormData] = useState(emptyForm);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -517,7 +630,7 @@ function PromosTab() {
       code: formData.code.toUpperCase(), 
       discount_type: formData.discount_type as "percent" | "fixed", 
       discount_value: parseFloat(formData.discount_value as any),
-      active: formData.active
+      is_active: formData.is_active
     };
     if (formData.max_uses) payload.max_uses = parseInt(formData.max_uses);
     if (formData.expires_at) payload.expires_at = new Date(formData.expires_at).toISOString();
@@ -526,8 +639,27 @@ function PromosTab() {
       onSuccess: () => {
         toast.success("Promo code created");
         queryClient.invalidateQueries({ queryKey: getListPromosQueryKey() });
-        setFormData({ code: "", discount_type: "percent", discount_value: 10, max_uses: "", expires_at: "", active: true });
-      }
+        setFormData(emptyForm);
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
+    });
+  };
+
+  const toggleActive = (promo: { id: string; is_active: boolean }) => {
+    updateMutation.mutate({ id: promo.id, data: { is_active: !promo.is_active } }, {
+      onSuccess: () => queryClient.invalidateQueries({ queryKey: getListPromosQueryKey() }),
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Delete promo code?")) return;
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => {
+        toast.success("Promo code deleted");
+        queryClient.invalidateQueries({ queryKey: getListPromosQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
     });
   };
 
@@ -564,47 +696,56 @@ function PromosTab() {
             </div>
           </div>
           <div className="flex items-center gap-2 pt-2">
-            <Switch checked={formData.active} onCheckedChange={v => setFormData({...formData, active: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Active</span>
+            <Switch checked={formData.is_active} onCheckedChange={v => setFormData({...formData, is_active: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Active</span>
           </div>
-          <button type="submit" disabled={createMutation.isPending} className="w-full py-3 bg-black text-white text-xs uppercase tracking-widest">Create Code</button>
+          <button type="submit" disabled={createMutation.isPending} className="w-full py-3 bg-black text-white text-xs uppercase tracking-widest disabled:opacity-50 flex items-center justify-center gap-2">
+            {createMutation.isPending && <Loader2 size={12} className="animate-spin" />}
+            Create Code
+          </button>
         </form>
       </div>
 
       <div className="lg:col-span-2 rounded-sm border overflow-hidden" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="border-b" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.mocha }}>
-              <th className="px-4 py-3 font-normal">Code</th>
-              <th className="px-4 py-3 font-normal">Discount</th>
-              <th className="px-4 py-3 font-normal">Uses</th>
-              <th className="px-4 py-3 font-normal">Expires</th>
-              <th className="px-4 py-3 font-normal text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {promos?.map(promo => (
-              <tr key={promo.id} className="border-b last:border-0 transition-opacity" style={{ borderColor: ADMIN_COLORS.border, opacity: promo.active ? 1 : 0.6 }}>
-                <td className="px-4 py-3"><span className="font-mono bg-black/5 px-2 py-1 rounded tracking-wider">{promo.code}</span></td>
-                <td className="px-4 py-3">{promo.discount_type === 'percent' ? `${promo.discount_value}%` : `$${promo.discount_value}`}</td>
-                <td className="px-4 py-3">{promo.uses_count} / {promo.max_uses || '∞'}</td>
-                <td className="px-4 py-3">{promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : 'Never'}</td>
-                <td className="px-4 py-3 text-right flex justify-end gap-3 items-center">
-                  <Switch checked={promo.active} onCheckedChange={() => {
-                    updateMutation.mutate({ id: promo.id, data: { active: !promo.active } }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListPromosQueryKey() }) });
-                  }} />
-                  <button onClick={() => {
-                    if(confirm("Delete promo code?")) deleteMutation.mutate({ id: promo.id }, { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListPromosQueryKey() }) });
-                  }} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
-                </td>
+        {isLoading ? (
+          <div className="p-8 text-center" style={{ color: ADMIN_COLORS.mocha }}>Loading promos...</div>
+        ) : (
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="border-b" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.mocha }}>
+                <th className="px-4 py-3 font-normal">Code</th>
+                <th className="px-4 py-3 font-normal">Discount</th>
+                <th className="px-4 py-3 font-normal">Uses</th>
+                <th className="px-4 py-3 font-normal">Expires</th>
+                <th className="px-4 py-3 font-normal text-right">Actions</th>
               </tr>
-            ))}
-            {promos?.length === 0 && <tr><td colSpan={5} className="py-8 text-center" style={{ color: ADMIN_COLORS.mocha }}>No promo codes created.</td></tr>}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {promos?.map(promo => (
+                <tr key={promo.id} className="border-b last:border-0 transition-opacity" style={{ borderColor: ADMIN_COLORS.border, opacity: promo.is_active ? 1 : 0.5 }}>
+                  <td className="px-4 py-3"><span className="font-mono bg-black/5 px-2 py-1 rounded tracking-wider">{promo.code}</span></td>
+                  <td className="px-4 py-3">{promo.discount_type === 'percent' ? `${promo.discount_value}%` : `$${promo.discount_value}`}</td>
+                  <td className="px-4 py-3">{promo.uses_count} / {promo.max_uses ?? '∞'}</td>
+                  <td className="px-4 py-3">{promo.expires_at ? new Date(promo.expires_at).toLocaleDateString() : 'Never'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-3 items-center">
+                      <Switch checked={promo.is_active} onCheckedChange={() => toggleActive(promo)} />
+                      <button onClick={() => handleDelete(promo.id)} className="text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {(promos ?? []).length === 0 && <tr><td colSpan={5} className="py-8 text-center" style={{ color: ADMIN_COLORS.mocha }}>No promo codes created.</td></tr>}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Settings Tab
+// ---------------------------------------------------------------------------
 
 function SettingsTab() {
   const queryClient = useQueryClient();
@@ -626,7 +767,7 @@ function SettingsTab() {
 
   useEffect(() => {
     if (settingsData && Object.keys(settingsData).length > 0) {
-      setSettings(prev => ({ ...prev, ...(settingsData as any) }));
+      setSettings(prev => ({ ...prev, ...settingsData }));
     }
   }, [settingsData]);
 
@@ -636,7 +777,8 @@ function SettingsTab() {
       onSuccess: () => {
         toast.success("Settings saved");
         queryClient.invalidateQueries({ queryKey: getGetSettingsQueryKey() });
-      }
+      },
+      onError: (err: any) => toast.error(`Failed to save: ${err.message}`)
     });
   };
 
@@ -710,14 +852,17 @@ function SettingsTab() {
         </div>
       </div>
 
-      <button type="submit" disabled={saveMutation.isPending} className="py-4 px-8 bg-black text-white text-xs uppercase tracking-[3px] hover:bg-black/80 transition-colors w-full md:w-auto">
+      <button type="submit" disabled={saveMutation.isPending} className="py-4 px-8 bg-black text-white text-xs uppercase tracking-[3px] hover:bg-black/80 transition-colors w-full md:w-auto disabled:opacity-50 flex items-center gap-2">
+        {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
         Save All Settings
       </button>
     </form>
   );
 }
 
-// --- MAIN ADMIN COMPONENT ---
+// ---------------------------------------------------------------------------
+// Main Admin Component
+// ---------------------------------------------------------------------------
 
 export function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
