@@ -1,11 +1,10 @@
-# WALLPAPER.MINIMAL
+# [Project name]
 
-A curated aesthetic iPhone wallpaper e-commerce shop. Tagline: "Dress your screen, softly."
+_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
-- `pnpm --filter @workspace/wallpaper-minimal run dev` — run the frontend (port 19491)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -15,40 +14,23 @@ A curated aesthetic iPhone wallpaper e-commerce shop. Tagline: "Dress your scree
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- Frontend: React + Vite, Tailwind CSS v4, Framer Motion, wouter
-- Fonts: Cormorant Garamond (headings), DM Sans (body) via Google Fonts
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM (`wallpapers`, `newsletter_subscribers` tables)
-- Payments: Stripe Checkout (server-side session creation)
-- Data from: Supabase (VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY) for future direct storage
+- DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
 - API codegen: Orval (from OpenAPI spec)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-- DB schema: `lib/db/src/schema/wallpapers.ts`
-- API spec: `lib/api-spec/openapi.yaml`
-- API routes: `artifacts/api-server/src/routes/`
-  - `wallpapers.ts` — CRUD + featured + categories + newsletter
-  - `checkout.ts` — Stripe checkout session creation
-- Frontend pages: `artifacts/wallpaper-minimal/src/pages/`
-- Theme/CSS: `artifacts/wallpaper-minimal/src/index.css`
+_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
 
 ## Architecture decisions
 
-- Stripe checkout is server-side only — secret key never exposed to frontend
-- Wallpaper `price` is stored as `numeric` in DB, converted to `number` on API response
-- Featured wallpapers feed the iPhone mockup carousel on the hero + showcase sections
-- Admin page is password-gated client-side via `VITE_ADMIN_PASSWORD` env var (default: `minimal2025`)
+_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
 
 ## Product
 
-- Landing page with hero, featured drops, mood collections (filterable), iPhone showcase, bundles, pricing, newsletter
-- Shop page with category filtering
-- Admin panel at `/admin` for uploading/managing wallpapers
-- Stripe checkout for single ($4), pack ($22), and full access ($45) purchases
-- Success page after payment
+_Describe the high-level user-facing capabilities of this app once they exist._
 
 ## User preferences
 
@@ -56,8 +38,7 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Google Fonts `@import url(...)` must be the FIRST line in `index.css` — before `@import "tailwindcss"` — or PostCSS fails silently
-- The CSS shadow variables block must stay inside a `:root` or `.dark` selector; orphaned CSS custom properties outside a block cause a "Missing opening {" parse error in Tailwind v4
+_Populate as you build — sharp edges, "always run X before Y" rules._
 
 ## Pointers
 
