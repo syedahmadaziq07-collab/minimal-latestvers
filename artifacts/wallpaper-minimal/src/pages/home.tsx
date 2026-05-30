@@ -154,7 +154,7 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-10">
-            {drops?.slice(0, 6).map((wallpaper) => (
+            {(drops || []).slice(0, 6).map((wallpaper) => (
               <motion.div
                 key={wallpaper.id}
                 whileHover={{ y: -4 }}
@@ -231,7 +231,7 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {moodWallpapers?.slice(0, 8).map((wallpaper) => (
+            {(moodWallpapers || []).slice(0, 8).map((wallpaper) => (
               <div
                 key={wallpaper.id}
                 className="group cursor-pointer"
