@@ -90,7 +90,7 @@ function DashboardTab() {
                 </tr>
               </thead>
               <tbody>
-                {stats.recent_orders.map((order: any, i: number) => (
+                {(stats.recent_orders || []).map((order: any, i: number) => (
                   <tr key={i} className="border-b last:border-0" style={{ borderColor: ADMIN_COLORS.border }}>
                     <td className="py-3">{new Date(order.created_at).toLocaleDateString()}</td>
                     <td className="py-3 truncate max-w-[120px]">{order.customer_email}</td>
