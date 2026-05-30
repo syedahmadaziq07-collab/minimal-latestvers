@@ -1,11 +1,12 @@
-import { useListWallpapers, getListWallpapersQueryKey, useCreateCheckoutSession, useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
+import { useListWallpapers, getListWallpapersQueryKey, useGetCategories, getGetCategoriesQueryKey } from "@/lib/queries";
 import { useState } from "react";
-import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useLocation } from "wouter";
 
 export function Shop() {
   const [activeCategory, setActiveCategory] = useState<string>("All");
-  
+  const [, navigate] = useLocation();
+
   const { data: categoriesData } = useGetCategories({
     query: { queryKey: getGetCategoriesQueryKey() },
   });
@@ -20,27 +21,6 @@ export function Shop() {
       },
     }
   );
-
-  const checkoutMutation = useCreateCheckoutSession();
-
-  const handleCheckout = (
-    type: "single" | "pack" | "bundle",
-    price: number,
-    name: string,
-    wallpaper_id?: string
-  ) => {
-    checkoutMutation.mutate(
-      { data: { type, price, name, wallpaper_id } },
-      {
-        onSuccess: (res) => {
-          window.location.href = res.url;
-        },
-        onError: () => {
-          toast.error("Failed to initiate checkout");
-        },
-      }
-    );
-  };
 
   return (
     <div className="pt-32 pb-24 px-6 min-h-screen bg-background">
@@ -91,7 +71,8 @@ export function Shop() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.05 }}
                 key={wallpaper.id}
-                className="group relative flex flex-col bg-card rounded-sm overflow-hidden border border-border hover:border-secondary transition-all shadow-sm"
+                className="group relative flex flex-col bg-card rounded-sm overflow-hidden border border-border hover:border-secondary transition-all shadow-sm cursor-pointer"
+                onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
                 <div className="aspect-[9/19.5] relative overflow-hidden bg-muted">
                   <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 z-10">
@@ -109,13 +90,13 @@ export function Shop() {
                     ${Number(wallpaper.price).toFixed(2)}
                   </p>
                   <button
-                    onClick={() =>
-                      handleCheckout("single", Number(wallpaper.price), wallpaper.name, wallpaper.id)
-                    }
-                    disabled={checkoutMutation.isPending}
-                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/wallpaper/${wallpaper.id}`);
+                    }}
+                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors"
                   >
-                    {checkoutMutation.isPending ? "Loading…" : "GET THIS →"}
+                    GET THIS →
                   </button>
                 </div>
               </motion.div>

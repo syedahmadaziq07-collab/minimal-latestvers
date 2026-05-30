@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { IPhoneMockup } from "@/components/ui/iPhoneMockup";
 import {
@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 
 export function Home() {
+  const [, navigate] = useLocation();
+
   const { data: drops } = useListWallpapers(
     { featured: true },
     { query: { queryKey: getListWallpapersQueryKey({ featured: true }) } }
@@ -40,22 +42,17 @@ export function Home() {
   const checkoutMutation = useCreateCheckoutSession();
   const newsletterMutation = useSubscribeNewsletter();
 
-  const handleCheckout = (
+  const handleBundleCheckout = (
     type: "single" | "pack" | "bundle",
     price: number,
     name: string,
-    wallpaper_id?: string,
     bundle_name?: string
   ) => {
     checkoutMutation.mutate(
-      { data: { type, price, name, wallpaper_id, bundle_name } },
+      { data: { type, price, name, bundle_name } },
       {
-        onSuccess: (res) => {
-          window.location.href = res.url;
-        },
-        onError: () => {
-          toast.error("Failed to initiate checkout");
-        },
+        onSuccess: (res) => { window.location.href = res.url; },
+        onError: () => { toast.error("Failed to initiate checkout"); },
       }
     );
   };
@@ -67,13 +64,8 @@ export function Home() {
     newsletterMutation.mutate(
       { data: { email } },
       {
-        onSuccess: () => {
-          toast.success("Subscribed successfully!");
-          setEmail("");
-        },
-        onError: () => {
-          toast.error("Failed to subscribe");
-        },
+        onSuccess: () => { toast.success("Subscribed successfully!"); setEmail(""); },
+        onError: () => { toast.error("Failed to subscribe"); },
       }
     );
   };
@@ -98,8 +90,7 @@ export function Home() {
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             className="text-muted-foreground text-lg md:text-xl max-w-md mb-10 leading-relaxed"
           >
-            Curated aesthetic wallpapers for your iPhone. Minimalist. Warm.
-            Yours.
+            Curated aesthetic wallpapers for your iPhone. Minimalist. Warm. Yours.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -132,12 +123,7 @@ export function Home() {
           </motion.div>
           <motion.div
             animate={{ y: [0, 10, 0] }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1,
-            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             className="absolute bottom-20 left-0 md:-left-10 bg-white/90 backdrop-blur text-primary text-xs px-4 py-2 rounded-full shadow-sm"
           >
             Aesthetic
@@ -158,7 +144,8 @@ export function Home() {
               <motion.div
                 key={wallpaper.id}
                 whileHover={{ y: -4 }}
-                className="group relative flex flex-col bg-background rounded-sm overflow-hidden border border-border/50 hover:border-secondary transition-all duration-300 shadow-sm"
+                className="group relative flex flex-col bg-background rounded-sm overflow-hidden border border-border/50 hover:border-secondary transition-all duration-300 shadow-sm cursor-pointer"
+                onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
                 <div className="aspect-[9/19.5] relative overflow-hidden bg-muted">
                   <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 z-10">
@@ -176,13 +163,10 @@ export function Home() {
                     ${Number(wallpaper.price).toFixed(2)}
                   </p>
                   <button
-                    onClick={() =>
-                      handleCheckout("single", Number(wallpaper.price), wallpaper.name, wallpaper.id)
-                    }
-                    disabled={checkoutMutation.isPending}
-                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={(e) => { e.stopPropagation(); navigate(`/wallpaper/${wallpaper.id}`); }}
+                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors"
                   >
-                    {checkoutMutation.isPending ? "Loading…" : "GET THIS →"}
+                    GET THIS →
                   </button>
                 </div>
               </motion.div>
@@ -236,9 +220,7 @@ export function Home() {
               <div
                 key={wallpaper.id}
                 className="group cursor-pointer"
-                onClick={() =>
-                  handleCheckout("single", wallpaper.price, wallpaper.name, wallpaper.id)
-                }
+                onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
                 <div className="aspect-[9/16] overflow-hidden mb-3 bg-muted rounded-sm">
                   <img
@@ -262,9 +244,7 @@ export function Home() {
             <IPhoneMockup />
           </div>
           <div className="flex-1 w-full">
-            <h2 className="text-4xl md:text-5xl font-serif italic mb-12">
-              Made for Your Screen
-            </h2>
+            <h2 className="text-4xl md:text-5xl font-serif italic mb-12">Made for Your Screen</h2>
             <div className="space-y-8">
               <div>
                 <h3 className="text-xl font-medium mb-2 flex items-center gap-3">
@@ -304,7 +284,6 @@ export function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
-            {/* Starter */}
             <div className="border border-border p-8 rounded-sm bg-card text-center">
               <h3 className="text-xl font-medium mb-2">Single</h3>
               <p className="text-muted-foreground text-sm mb-6">1 wallpaper</p>
@@ -317,7 +296,6 @@ export function Home() {
               </Link>
             </div>
 
-            {/* Cozy Pack */}
             <div className="border border-secondary p-10 rounded-sm bg-primary text-primary-foreground text-center relative transform md:scale-105 shadow-xl z-10">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-secondary text-primary text-[10px] uppercase tracking-wider px-3 py-1 font-bold">
                 Most Popular
@@ -326,9 +304,7 @@ export function Home() {
               <p className="text-primary-foreground/70 text-sm mb-6">18 wallpapers</p>
               <div className="text-5xl font-serif italic mb-8">$17.99</div>
               <button
-                onClick={() =>
-                  handleCheckout("pack", 17.99, "Essential Set", undefined, "Essential Set")
-                }
+                onClick={() => handleBundleCheckout("pack", 17.99, "Essential Set", "Essential Set")}
                 disabled={checkoutMutation.isPending}
                 className="w-full py-4 bg-secondary text-primary font-medium text-xs uppercase tracking-widest hover:bg-[#b8a58d] transition-colors rounded-[2px] disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -336,15 +312,12 @@ export function Home() {
               </button>
             </div>
 
-            {/* All Access */}
             <div className="border border-border p-8 rounded-sm bg-card text-center">
               <h3 className="text-xl font-medium mb-2">Full Collection</h3>
               <p className="text-muted-foreground text-sm mb-6">Everything + future drops</p>
               <div className="text-4xl font-serif italic mb-8">$29.99</div>
               <button
-                onClick={() =>
-                  handleCheckout("bundle", 29.99, "Full Collection", undefined, "Full Collection")
-                }
+                onClick={() => handleBundleCheckout("bundle", 29.99, "Full Collection", "Full Collection")}
                 disabled={checkoutMutation.isPending}
                 className="w-full py-3 border border-primary text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >

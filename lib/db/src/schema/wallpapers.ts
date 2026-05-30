@@ -9,6 +9,7 @@ export const wallpapersTable = pgTable("wallpapers", {
   style: text("style"),
   price: numeric("price", { precision: 10, scale: 2 }).notNull().default("4.00"),
   image_url: text("image_url").notNull(),
+  additional_images: text("additional_images").array().default([]),
   drive_url: text("drive_url"),
   featured: boolean("featured").notNull().default(false),
   created_at: timestamp("created_at").defaultNow().notNull(),

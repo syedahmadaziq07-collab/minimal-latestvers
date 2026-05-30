@@ -25,6 +25,7 @@ export interface Wallpaper {
   style: string | null;
   price: number;
   image_url: string;
+  additional_images: string[] | null;
   drive_url: string | null;
   featured: boolean;
   created_at: string;
@@ -90,6 +91,8 @@ export const getListWallpapersQueryKey = (
 ) => ["wallpapers", params ?? {}] as const;
 
 export const getGetCategoriesQueryKey = () => ["categories"] as const;
+
+export const getGetWallpaperQueryKey = (id: string) => ["wallpaper", id] as const;
 
 export const getGetStylesQueryKey = () => ["styles"] as const;
 
@@ -166,6 +169,26 @@ export function useDeleteWallpaper() {
       const { error } = await db().from("wallpapers").delete().eq("id", id);
       if (error) throw error;
     },
+  });
+}
+
+export function useGetWallpaper(
+  id: string,
+  options?: { query?: Partial<UseQueryOptions<Wallpaper>> }
+) {
+  return useQuery<Wallpaper>({
+    queryKey: getGetWallpaperQueryKey(id),
+    queryFn: async () => {
+      const { data, error } = await db()
+        .from("wallpapers")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      return data as Wallpaper;
+    },
+    enabled: !!id,
+    ...options?.query,
   });
 }
 

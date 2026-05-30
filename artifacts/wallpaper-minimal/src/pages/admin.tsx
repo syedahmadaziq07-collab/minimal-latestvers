@@ -128,17 +128,41 @@ function WallpapersTab() {
   const deleteMutation = useDeleteWallpaper();
 
   const [formData, setFormData] = useState({
-    name: "", category: "", style: "", price: 4, image_url: "", drive_url: "", featured: false
+    name: "", category: "", style: "", price: 4, image_url: "", additional_images: [] as string[], drive_url: "", featured: false
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [additionalUploading, setAdditionalUploading] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", drive_url: "", featured: false });
+    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", additional_images: [], drive_url: "", featured: false });
     setEditingId(null);
     setPreviewUrl(null);
+  };
+
+  const uploadAdditionalImage = async (file: File) => {
+    if (!supabase) { toast.error("Supabase not configured"); return; }
+    if (formData.additional_images.length >= 4) { toast.error("Maximum 4 additional images"); return; }
+    setAdditionalUploading(true);
+    try {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const fileName = `extra-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("wallpapers").upload(fileName, file, { upsert: false });
+      if (uploadError) throw uploadError;
+      const { data: publicData } = supabase.storage.from("wallpapers").getPublicUrl(fileName);
+      setFormData(prev => ({ ...prev, additional_images: [...prev.additional_images, publicData.publicUrl] }));
+      toast.success("Extra image uploaded");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message}`);
+    } finally {
+      setAdditionalUploading(false);
+    }
+  };
+
+  const removeAdditionalImage = (idx: number) => {
+    setFormData(prev => ({ ...prev, additional_images: prev.additional_images.filter((_, i) => i !== idx) }));
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -238,7 +262,7 @@ function WallpapersTab() {
     });
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || uploading;
+  const isPending = createMutation.isPending || updateMutation.isPending || uploading || additionalUploading;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -285,6 +309,53 @@ function WallpapersTab() {
               URL: {formData.image_url.slice(0, 60)}…
             </p>
           )}
+
+          {/* Additional Images */}
+          <div>
+            <label className="block text-xs uppercase tracking-widest mb-2" style={{ color: ADMIN_COLORS.mocha }}>
+              Additional Images (Optional, up to 4)
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {formData.additional_images.map((url, idx) => (
+                <div key={idx} className="relative aspect-[9/16] bg-black/5 rounded-sm overflow-hidden">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeAdditionalImage(idx)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/70 text-white text-xs flex items-center justify-center hover:bg-black rounded-full"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {formData.additional_images.length < 4 && (
+                <label
+                  className="aspect-[9/16] border border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-black/5 transition-colors rounded-sm"
+                  style={{ borderColor: ADMIN_COLORS.border }}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={additionalUploading}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadAdditionalImage(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  {additionalUploading ? (
+                    <span className="text-[10px]" style={{ color: ADMIN_COLORS.mocha }}>Uploading…</span>
+                  ) : (
+                    <>
+                      <span className="text-lg mb-1" style={{ color: ADMIN_COLORS.mocha }}>+</span>
+                      <span className="text-[10px]" style={{ color: ADMIN_COLORS.mocha }}>Add Image</span>
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+          </div>
 
           <div>
             <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Name</label>
@@ -385,7 +456,7 @@ function WallpapersTab() {
                     <div className="absolute top-2 left-2 bg-black text-white text-[9px] uppercase tracking-wider px-2 py-0.5">Featured</div>
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, drive_url: wp.drive_url ?? "", featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, additional_images: wp.additional_images ?? [], drive_url: wp.drive_url ?? "", featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
                     <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">

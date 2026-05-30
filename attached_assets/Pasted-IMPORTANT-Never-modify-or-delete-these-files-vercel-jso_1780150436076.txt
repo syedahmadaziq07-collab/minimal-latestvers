@@ -1,0 +1,67 @@
+IMPORTANT: Never modify or delete these files:
+- vercel.json (root)
+- artifacts/mockup-sandbox/vite.config.ts
+- api/tsconfig.json
+
+Add wallpaper detail page with image gallery:
+
+1. DATABASE - Add images array support
+   In Supabase, add new column:
+   ALTER TABLE wallpapers ADD COLUMN IF NOT EXISTS 
+   additional_images text[] DEFAULT '{}';
+   
+   This stores extra image URLs as an array.
+   Main image stays in existing "image_url" column.
+
+2. ADMIN PAGE - Multiple image upload
+   In the wallpaper upload/edit form, after the 
+   main image upload area, add:
+   - "Additional Images (Optional)" section
+   - Allow uploading up to 4 extra images
+   - Each uploads to Supabase Storage bucket "wallpapers"
+   - Show preview thumbnails of uploaded extra images
+   - Allow removing individual extra images
+   - Save URLs to "additional_images" column in Supabase
+
+3. NEW DETAIL PAGE
+   Create new route: /wallpaper/:id
+   
+   Layout:
+   - Left side (60%): Image gallery
+     * Main large image display
+     * Thumbnail strip below (main + additional images)
+     * Click thumbnail → switch main image
+     * Fullscreen button → lightbox mode
+     * If only 1 image, just show that image (no thumbnails)
+   
+   - Right side (40%): Product info
+     * Wallpaper name (Cormorant Garamond, large)
+     * Category tag + Style tag
+     * Price (large, elegant)
+     * Description if available
+     * "4K Resolution" "OLED Optimized" "Instant Download" 
+       feature badges
+     * Big "BUY NOW — $X" button (full width, dark)
+     * "Secure payment via Stripe" text below button
+   
+   - Keep WALLPAPER.MINIMAL design style:
+     * Background: #FFFFFF
+     * Text: #1A1A1A
+     * Accent: #D4C5B0
+     * Font: Cormorant Garamond + DM Sans
+
+4. UPDATE SHOP PAGE
+   - Clicking wallpaper card/image → go to /wallpaper/:id
+   - "GET THIS →" button → also go to /wallpaper/:id
+   - Remove direct Stripe checkout from shop card buttons
+   - Checkout only happens from detail page
+
+5. UPDATE HOME PAGE
+   - Featured drops cards → clicking goes to /wallpaper/:id
+   - Same for mood collections section
+
+6. ROUTING
+   Add /wallpaper/:id route in react-router-dom
+
+After all changes, run typecheck to confirm 
+zero errors, then push to GitHub.
