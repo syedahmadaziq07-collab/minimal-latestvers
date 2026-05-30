@@ -16,7 +16,7 @@ export function IPhoneMockup() {
   ];
 
   const images = featured && featured.length > 0
-    ? featured.map(f => f.image_url)
+    ? ( featured || []).map(f => f.image_url)
     : fallbackImages;
 
   useEffect(() => {
@@ -32,7 +32,7 @@ export function IPhoneMockup() {
         <div className="w-[100px] h-[30px] bg-black rounded-full" />
       </div>
       <div className="relative w-full h-full rounded-[40px] overflow-hidden bg-gray-900 isolation-isolate">
-        {images.map((src, idx) => (
+        {(images || []).map((src, idx) => (
           <div
             key={src}
             className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
