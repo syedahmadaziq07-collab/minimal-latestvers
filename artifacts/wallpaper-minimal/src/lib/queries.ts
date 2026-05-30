@@ -322,6 +322,29 @@ export function useUpdateOrder() {
   });
 }
 
+export const getOrdersByEmailQueryKey = (email: string) => ["orders", "by-email", email] as const;
+
+export function useGetOrdersByEmail(
+  email: string,
+  options?: { query?: Partial<UseQueryOptions<Order[]>> }
+) {
+  return useQuery<Order[]>({
+    queryKey: getOrdersByEmailQueryKey(email),
+    queryFn: async () => {
+      const { data, error } = await db()
+        .from("orders")
+        .select("*")
+        .eq("customer_email", email)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Order[];
+    },
+    enabled: !!email,
+    ...options?.query,
+  });
+}
+
 export function useDeleteOrder() {
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
