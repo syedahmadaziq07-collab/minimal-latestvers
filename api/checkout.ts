@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     full_access: 'Full access — all wallpapers + future drops',
   };
 
-  const stripe = new Stripe(secretKey, { apiVersion: '2026-05-27.dahlia' as any });
+  const stripe = new Stripe(secretKey, { apiVersion: '2025-11-27.acacia' as any });
 
   try {
     const session = await stripe.checkout.sessions.create({
