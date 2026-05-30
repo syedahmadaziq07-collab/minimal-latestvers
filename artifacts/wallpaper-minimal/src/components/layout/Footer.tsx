@@ -16,19 +16,20 @@ export function Footer() {
         <div>
           <h4 className="text-[11px] uppercase tracking-[3px] mb-6 text-primary-foreground/50">Shop</h4>
           <ul className="space-y-4 text-sm">
-            <li><Link href="/shop" className="hover:text-secondary transition-colors">All Wallpapers</Link></li>
+            <li><Link href="/shop" className="hover:text-secondary transition-colors">Latest Drops</Link></li>
             <li><Link href="/collections" className="hover:text-secondary transition-colors">Collections</Link></li>
             <li><Link href="/bundles" className="hover:text-secondary transition-colors">Bundles</Link></li>
+            <li><Link href="/#pricing" className="hover:text-secondary transition-colors">All Access</Link></li>
           </ul>
         </div>
 
         <div>
           <h4 className="text-[11px] uppercase tracking-[3px] mb-6 text-primary-foreground/50">Help</h4>
           <ul className="space-y-4 text-sm">
-            <li><a href="#" className="hover:text-secondary transition-colors">FAQ</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">Terms of Service</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">Privacy Policy</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">Contact</a></li>
+            <li><Link href="/faq" className="hover:text-secondary transition-colors">FAQ</Link></li>
+            <li><Link href="/about" className="hover:text-secondary transition-colors">About</Link></li>
+            <li><Link href="/about" className="hover:text-secondary transition-colors">Contact</Link></li>
+            <li><Link href="/faq" className="hover:text-secondary transition-colors">Refund Policy</Link></li>
           </ul>
         </div>
 
@@ -36,8 +37,8 @@ export function Footer() {
           <h4 className="text-[11px] uppercase tracking-[3px] mb-6 text-primary-foreground/50">Follow</h4>
           <ul className="space-y-4 text-sm">
             <li><a href="#" className="hover:text-secondary transition-colors">Instagram</a></li>
+            <li><a href="#" className="hover:text-secondary transition-colors">TikTok</a></li>
             <li><a href="#" className="hover:text-secondary transition-colors">Pinterest</a></li>
-            <li><a href="#" className="hover:text-secondary transition-colors">Twitter</a></li>
           </ul>
         </div>
       </div>

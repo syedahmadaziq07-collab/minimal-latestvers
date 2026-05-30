@@ -1,0 +1,114 @@
+IMPORTANT: Never modify or delete these files:
+- vercel.json (root)
+- artifacts/mockup-sandbox/vite.config.ts
+- api/tsconfig.json
+
+Add these 4 features to the website:
+
+1. FAQ PAGE
+   Create new route: /faq
+   Add FAQ link in navbar and footer.
+   
+   Design: Same WALLPAPER.MINIMAL style
+   (white background, Cormorant Garamond, clean minimal)
+   
+   Include these questions:
+   
+   GETTING STARTED
+   Q: How do I receive my wallpaper after purchase?
+   A: After payment, you'll receive an email with 
+      your download link within a few minutes.
+   
+   Q: What format are the wallpapers?
+   A: All wallpapers are in high-quality JPG or PNG 
+      format, optimized for iPhone screens.
+   
+   Q: What resolution are the wallpapers?
+   A: All wallpapers are 4K resolution, perfectly 
+      sized for iPhone displays.
+   
+   COMPATIBILITY
+   Q: Which iPhone models are supported?
+   A: Our wallpapers work on all iPhone models 
+      including iPhone 12, 13, 14, 15, and 16 series.
+   
+   Q: Can I use the wallpaper on both home and 
+      lock screen?
+   A: Yes! All wallpapers are sized to work 
+      beautifully on both screens.
+   
+   PAYMENT & REFUNDS
+   Q: What payment methods are accepted?
+   A: We accept all major credit and debit cards 
+      via Stripe secure checkout.
+   
+   Q: Can I get a refund?
+   A: Due to the digital nature of our products, 
+      we do not offer refunds after download. 
+      Please contact us if you have any issues.
+   
+   Q: Is my payment secure?
+   A: Yes, all payments are processed securely 
+      through Stripe.
+
+2. ABOUT/CONTACT PAGE
+   Create new route: /about
+   Add About link in navbar and footer.
+   
+   Design: Same WALLPAPER.MINIMAL style
+   
+   Sections:
+   - Hero: "About WALLPAPER.MINIMAL"
+     Tagline: "Curated aesthetic wallpapers for 
+     those who care about every detail."
+   
+   - Our Story section:
+     "WALLPAPER.MINIMAL was born from a love of 
+     clean, beautiful design. Every wallpaper in 
+     our collection is carefully curated to bring 
+     calm and beauty to your screen."
+   
+   - What We Offer:
+     * Handpicked aesthetic wallpapers
+     * 4K resolution for crystal clarity  
+     * New drops every week
+     * Instant digital delivery
+   
+   - Contact Section:
+     Title: "Get In Touch"
+     Text: "Have a question or request? 
+     We'd love to hear from you."
+     Email: display VITE_CONTACT_EMAIL env variable
+     Simple contact form with:
+       - Name field
+       - Email field  
+       - Message field
+       - SEND MESSAGE button (sends via Resend API 
+         to admin email)
+
+3. WATERMARK ON PREVIEW IMAGES
+   Add a subtle watermark to all wallpaper preview 
+   images shown on the website (shop, home, collections).
+   
+   Watermark specs:
+   - Text: "WALLPAPER.MINIMAL"
+   - Position: bottom center of image
+   - Style: semi-transparent white text
+   - Font size: small, not too intrusive
+   - CSS overlay approach (not modifying actual images)
+   - Remove watermark on detail page after purchase
+   
+   Implementation: Use CSS ::after pseudo-element 
+   or overlay div on all wallpaper card images.
+
+4. UPDATE NAVBAR AND FOOTER
+   Navbar links: SHOP · COLLECTIONS · BUNDLES · 
+   PRICING · FAQ · ABOUT
+   
+   Footer columns update:
+   - Shop: Latest Drops · Collections · Bundles · All Access
+   - Help: FAQ · About · Contact · Refund Policy
+   - Follow: Instagram · TikTok · Pinterest
+
+After all changes, run typecheck to confirm 
+zero TypeScript errors, then push to GitHub.

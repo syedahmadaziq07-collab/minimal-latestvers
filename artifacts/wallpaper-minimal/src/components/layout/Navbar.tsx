@@ -19,6 +19,8 @@ export function Navbar() {
     { href: "/collections", label: "COLLECTIONS" },
     { href: "/bundles", label: "BUNDLES" },
     { href: "/#pricing", label: "PRICING" },
+    { href: "/faq", label: "FAQ" },
+    { href: "/about", label: "ABOUT" },
   ];
 
   return (
@@ -35,7 +37,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-6">
           {links.map((link) => (
             <Link
               key={link.href}

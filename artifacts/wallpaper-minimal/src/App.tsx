@@ -13,6 +13,8 @@ import { Bundles } from "@/pages/bundles";
 import { Success } from "@/pages/success";
 import { Admin } from "@/pages/admin";
 import { WallpaperDetail } from "@/pages/wallpaper-detail";
+import { Faq } from "@/pages/faq";
+import { About } from "@/pages/about";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +40,8 @@ function Router() {
           <Route path="/collections" component={Collections} />
           <Route path="/bundles" component={Bundles} />
           <Route path="/wallpaper/:id" component={WallpaperDetail} />
+          <Route path="/faq" component={Faq} />
+          <Route path="/about" component={About} />
           <Route path="/success" component={Success} />
           <Route path="/admin" component={Admin} />
           <Route component={NotFound} />

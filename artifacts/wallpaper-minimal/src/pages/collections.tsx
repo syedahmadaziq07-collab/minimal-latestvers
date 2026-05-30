@@ -50,6 +50,9 @@ export function Collections() {
                     alt={cat.category}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
+                  <div className="absolute bottom-3 left-0 right-0 flex justify-center z-20 pointer-events-none">
+                    <span className="text-white/35 text-[7px] uppercase tracking-[2px] font-sans select-none">WALLPAPER.MINIMAL</span>
+                  </div>
                   <div className="absolute inset-0 flex flex-col items-center justify-center z-20 text-white p-6 text-center">
                     <h2 className="text-4xl font-serif italic mb-2 drop-shadow-md">{cat.category}</h2>
                     <p className="text-sm uppercase tracking-widest drop-shadow-md">{cat.count} Wallpapers</p>

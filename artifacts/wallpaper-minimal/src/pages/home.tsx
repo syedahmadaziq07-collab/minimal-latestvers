@@ -156,6 +156,9 @@ export function Home() {
                     alt={wallpaper.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center z-10 pointer-events-none">
+                    <span className="text-white/40 text-[7px] uppercase tracking-[2px] font-sans select-none">WALLPAPER.MINIMAL</span>
+                  </div>
                 </div>
                 <div className="p-4 flex flex-col items-center flex-1 justify-between bg-white text-center">
                   <h3 className="font-serif text-xl mb-1">{wallpaper.name}</h3>
@@ -222,12 +225,15 @@ export function Home() {
                 className="group cursor-pointer"
                 onClick={() => navigate(`/wallpaper/${wallpaper.id}`)}
               >
-                <div className="aspect-[9/16] overflow-hidden mb-3 bg-muted rounded-sm">
+                <div className="aspect-[9/16] overflow-hidden mb-3 bg-muted rounded-sm relative">
                   <img
                     src={wallpaper.image_url}
                     alt={wallpaper.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
+                  <div className="absolute bottom-2 left-0 right-0 flex justify-center z-10 pointer-events-none">
+                    <span className="text-white/40 text-[7px] uppercase tracking-[2px] font-sans select-none">WALLPAPER.MINIMAL</span>
+                  </div>
                 </div>
                 <h4 className="font-serif text-lg">{wallpaper.name}</h4>
                 <p className="text-sm text-muted-foreground">${wallpaper.price}</p>
