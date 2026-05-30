@@ -1,4 +1,4 @@
-const Stripe = require('stripe');
+const crypto = require('crypto');
 
 async function supabaseFetch(path, options = {}) {
   const url = process.env.SUPABASE_URL;
@@ -100,6 +100,29 @@ async function sendEmail(to, subject, html) {
   return res.ok;
 }
 
+function verifyStripeSignature(payload, signatureHeader, webhookSecret) {
+  const parts = signatureHeader.split(',').reduce((acc, p) => {
+    const [k, v] = p.split('=');
+    if (k === 't') acc.timestamp = v;
+    if (k === 'v1') acc.signature = v;
+    return acc;
+  }, {});
+  if (!parts.timestamp || !parts.signature) return null;
+
+  const signedPayload = `${parts.timestamp}.${payload}`;
+  const expectedSig = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(signedPayload)
+    .digest('hex');
+
+  if (expectedSig !== parts.signature) return null;
+
+  const age = Date.now() / 1000 - Number(parts.timestamp);
+  if (Math.abs(age) > 300) return null;
+
+  return JSON.parse(payload);
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -117,14 +140,11 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Missing stripe-signature header' });
   }
 
+  const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
   let event;
   try {
-    const stripe = new Stripe(secretKey);
-    event = stripe.webhooks.constructEvent(
-      typeof req.body === 'string' ? req.body : JSON.stringify(req.body),
-      sig,
-      webhookSecret
-    );
+    event = verifyStripeSignature(rawBody, sig, webhookSecret);
+    if (!event) throw new Error('Signature verification failed');
   } catch (err) {
     return res.status(400).json({ error: `Webhook error: ${err.message}` });
   }
@@ -136,7 +156,6 @@ module.exports = async function handler(req, res) {
     const wallpaperName = session.metadata?.wallpaper_name || 'Your wallpaper';
     const amountTotal = (session.amount_total || 0) / 100;
 
-    // Save order to Supabase
     try {
       await supabaseFetch('orders', {
         method: 'POST',
@@ -152,7 +171,6 @@ module.exports = async function handler(req, res) {
       console.error('Failed to save order:', dbErr);
     }
 
-    // Send email with download link
     if (customerEmail && wallpaperId) {
       try {
         const rows = await supabaseFetch(
@@ -165,7 +183,7 @@ module.exports = async function handler(req, res) {
         if (driveUrl) {
           await sendEmail(
             customerEmail,
-            'Your wallpaper is ready! \u2014 WALLPAPER.MINIMAL',
+            'Your wallpaper is ready! — WALLPAPER.MINIMAL',
             buildEmailHtml(name, driveUrl)
           );
         }
