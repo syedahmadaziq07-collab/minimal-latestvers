@@ -37,7 +37,8 @@ module.exports = async function handler(req, res) {
     if (!stripeRes.ok) throw new Error(body.error?.message || `Stripe API error: ${stripeRes.status}`);
     return res.status(200).json({ url: body.url });
   } catch (err) {
-    console.error('Stripe error:', err.message);
-    return res.status(500).json({ error: err.message });
+    const msg = err?.message || 'Unknown error';
+    console.error('Stripe error:', msg);
+    return res.status(500).json({ error: msg });
   }
 };

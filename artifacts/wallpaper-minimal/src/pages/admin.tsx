@@ -188,6 +188,7 @@ function WallpapersTab() {
       return;
     }
 
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
     setUploading(true);
 
@@ -221,8 +222,13 @@ function WallpapersTab() {
       toast.error("Please upload an image first");
       return;
     }
+    const payload = {
+      ...formData,
+      style: formData.style || null,
+      drive_url: formData.drive_url || null,
+    };
     if (editingId) {
-      updateMutation.mutate({ id: editingId, data: formData }, {
+      updateMutation.mutate({ id: editingId, data: payload }, {
         onSuccess: () => {
           toast.success("Wallpaper updated");
           queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
@@ -231,7 +237,7 @@ function WallpapersTab() {
         onError: (err: any) => toast.error(`Failed to update: ${err.message}`)
       });
     } else {
-      createMutation.mutate({ data: formData }, {
+      createMutation.mutate({ data: payload }, {
         onSuccess: () => {
           toast.success("Wallpaper saved");
           queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
@@ -403,7 +409,7 @@ function WallpapersTab() {
           <div>
             <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Price ($)</label>
             <input 
-              type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})}
+              type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value) || 0})}
               className="w-full p-2.5 text-sm bg-transparent border outline-none focus:border-black transition-colors"
               style={{ borderColor: ADMIN_COLORS.border }}
             />
@@ -679,11 +685,11 @@ function BundlesTab() {
             </div>
             <div>
               <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Price ($)</label>
-              <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
+              <input type="number" step="0.01" required value={formData.price} onChange={e => setFormData({...formData, price: parseFloat(e.target.value) || 0})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
             </div>
             <div>
               <label className="block text-xs uppercase tracking-widest mb-1" style={{ color: ADMIN_COLORS.mocha }}>Wallpaper Count</label>
-              <input type="number" required value={formData.wallpaper_count} onChange={e => setFormData({...formData, wallpaper_count: parseInt(e.target.value)})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
+              <input type="number" required value={formData.wallpaper_count} onChange={e => setFormData({...formData, wallpaper_count: parseInt(e.target.value) || 0})} className="w-full p-2 bg-transparent border outline-none" style={{ borderColor: ADMIN_COLORS.border }} />
             </div>
             <div className="flex items-center gap-2 pt-2">
               <Switch checked={formData.is_popular} onCheckedChange={v => setFormData({...formData, is_popular: v})} /> <span className="text-sm" style={{ color: ADMIN_COLORS.mocha }}>Popular</span>
@@ -716,7 +722,7 @@ function PromosTab() {
   const updateMutation = useUpdatePromo();
   const deleteMutation = useDeletePromo();
 
-  const emptyForm = { code: "", discount_type: "percent", discount_value: 10, max_uses: "", expires_at: "", is_active: true };
+  const emptyForm = { code: "", discount_type: "percent", discount_value: "10", max_uses: "", expires_at: "", is_active: true };
   const [formData, setFormData] = useState(emptyForm);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -724,10 +730,10 @@ function PromosTab() {
     const payload: any = { 
       code: formData.code.toUpperCase(), 
       discount_type: formData.discount_type as "percent" | "fixed", 
-      discount_value: parseFloat(formData.discount_value as any),
+      discount_value: parseFloat(formData.discount_value) || 0,
       is_active: formData.is_active
     };
-    if (formData.max_uses) payload.max_uses = parseInt(formData.max_uses);
+    if (formData.max_uses) payload.max_uses = parseInt(formData.max_uses) || null;
     if (formData.expires_at) payload.expires_at = new Date(formData.expires_at).toISOString();
 
     createMutation.mutate({ data: payload }, {

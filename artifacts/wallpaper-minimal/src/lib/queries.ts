@@ -380,7 +380,7 @@ export function useGetOrderStats(options?: {
       const byType: Record<string, number> = {};
 
       for (const o of orders) {
-        const amount = Number(o.amount);
+        const amount = Number(o.amount) || 0;
         total_revenue += amount;
         byType[o.product] = (byType[o.product] ?? 0) + amount;
         if (new Date(o.created_at) >= todayStart) {
@@ -402,7 +402,7 @@ export function useGetOrderStats(options?: {
           created_at: o.created_at,
           customer_email: o.customer_email,
           product: o.product,
-          amount: Number(o.amount),
+          amount: Number(o.amount) || 0,
         })),
       };
     },

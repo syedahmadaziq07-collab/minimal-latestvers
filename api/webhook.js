@@ -140,13 +140,18 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'Missing stripe-signature header' });
   }
 
-  const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+  const rawBody = await new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => resolve(body));
+  });
   let event;
   try {
     event = verifyStripeSignature(rawBody, sig, webhookSecret);
     if (!event) throw new Error('Signature verification failed');
   } catch (err) {
-    return res.status(400).json({ error: `Webhook error: ${err.message}` });
+    const webhookErr = err?.message || 'Unknown';
+    return res.status(400).json({ error: `Webhook error: ${webhookErr}` });
   }
 
   if (event.type === 'checkout.session.completed') {
@@ -195,3 +200,5 @@ module.exports = async function handler(req, res) {
 
   res.json({ received: true });
 };
+
+module.exports.config = { api: { bodyParser: false } };
