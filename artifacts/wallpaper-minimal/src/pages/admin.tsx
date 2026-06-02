@@ -242,10 +242,35 @@ function WallpapersTab() {
       });
     } else {
       createMutation.mutate({ data: payload }, {
-        onSuccess: () => {
+        onSuccess: async () => {
           toast.success("Wallpaper saved");
           queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
           resetForm();
+          if (notify) {
+            setNotifying(true);
+            try {
+              const res = await fetch("/api/notify-new", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: formData.name,
+                  image_url: formData.image_url,
+                  price: formData.price,
+                  is_free: formData.is_free,
+                }),
+              });
+              const data = await res.json();
+              if (res.ok) {
+                toast.success(`Notification sent to ${data.sent} subscribers`);
+              } else {
+                toast.error(data.error || "Failed to send notifications");
+              }
+            } catch (err: any) {
+              toast.error("Failed to send notifications");
+            } finally {
+              setNotifying(false);
+            }
+          }
         },
         onError: (err: any) => toast.error(`Failed to save: ${err.message}`)
       });
@@ -273,6 +298,8 @@ function WallpapersTab() {
     });
   };
 
+  const [notify, setNotify] = useState(false);
+  const [notifying, setNotifying] = useState(false);
   const isPending = createMutation.isPending || updateMutation.isPending || uploading || additionalUploading;
 
   return (
@@ -429,14 +456,23 @@ function WallpapersTab() {
             <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Free Wallpaper</span>
           </div>
 
+          {!editingId && !notifying && (
+            <div className="flex items-center gap-3 pt-2">
+              <Switch checked={notify} onCheckedChange={setNotify} />
+              <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>
+                Notify past customers about this new release
+              </span>
+            </div>
+          )}
+
           <div className="pt-4 flex gap-3">
             <button 
               type="submit" 
-              disabled={isPending} 
+              disabled={isPending || notifying} 
               className="flex-1 py-3 text-xs uppercase tracking-widest text-white bg-black hover:bg-black/80 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isPending && <Loader2 size={14} className="animate-spin" />}
-              {editingId ? 'Update' : 'Save Wallpaper'}
+              {(isPending || notifying) && <Loader2 size={14} className="animate-spin" />}
+              {notifying ? 'Notifying…' : editingId ? 'Update' : 'Save Wallpaper'}
             </button>
             {editingId && (
               <button type="button" onClick={resetForm} className="px-4 border text-xs uppercase tracking-widest transition-colors hover:bg-black/5" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.text }}>
