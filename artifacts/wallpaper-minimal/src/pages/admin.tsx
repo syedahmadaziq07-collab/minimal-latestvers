@@ -287,7 +287,7 @@ function WallpapersTab() {
     });
   };
 
-  const toggleShowOnHome = (wp: { id: string; show_on_home: boolean }) => {
+  const toggleShowOnHome = (wp: { id: string; show_on_home?: boolean }) => {
     updateMutation.mutate({ id: wp.id, data: { show_on_home: !wp.show_on_home } }, {
       onSuccess: () => {
         toast.success(`Home display ${!wp.show_on_home ? 'enabled' : 'disabled'}`);
