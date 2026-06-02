@@ -31,8 +31,8 @@ export function Home() {
   );
 
   const { data: drops } = useListWallpapers(
-    { featured: true },
-    { query: { queryKey: getListWallpapersQueryKey({ featured: true }) } }
+    { show_on_home: true },
+    { query: { queryKey: getListWallpapersQueryKey({ show_on_home: true }) } }
   );
 
   const { data: categoriesData } = useGetCategories({

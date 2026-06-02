@@ -133,7 +133,7 @@ function WallpapersTab() {
   const deleteMutation = useDeleteWallpaper();
 
   const [formData, setFormData] = useState({
-    name: "", category: "", style: "", price: 4, image_url: "", additional_images: [] as string[], drive_url: "", featured: false, is_free: false
+    name: "", category: "", style: "", price: 4, image_url: "", additional_images: [] as string[], drive_url: "", featured: false, is_free: false, show_on_home: false
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -142,7 +142,7 @@ function WallpapersTab() {
   const [additionalUploading, setAdditionalUploading] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", additional_images: [], drive_url: "", featured: false, is_free: false });
+    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", additional_images: [], drive_url: "", featured: false, is_free: false, show_on_home: false });
     setEditingId(null);
     setPreviewUrl(null);
   };
@@ -281,6 +281,16 @@ function WallpapersTab() {
     updateMutation.mutate({ id: wp.id, data: { featured: !wp.featured } }, {
       onSuccess: () => {
         toast.success(`${!wp.featured ? 'Featured' : 'Unfeatured'}`);
+        queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
+      },
+      onError: (err: any) => toast.error(`Failed: ${err.message}`)
+    });
+  };
+
+  const toggleShowOnHome = (wp: { id: string; show_on_home: boolean }) => {
+    updateMutation.mutate({ id: wp.id, data: { show_on_home: !wp.show_on_home } }, {
+      onSuccess: () => {
+        toast.success(`Home display ${!wp.show_on_home ? 'enabled' : 'disabled'}`);
         queryClient.invalidateQueries({ queryKey: getListWallpapersQueryKey() });
       },
       onError: (err: any) => toast.error(`Failed: ${err.message}`)
@@ -456,6 +466,11 @@ function WallpapersTab() {
             <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Free Wallpaper</span>
           </div>
 
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={formData.show_on_home} onCheckedChange={(v) => setFormData({...formData, show_on_home: v})} />
+            <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Show on Home Page</span>
+          </div>
+
           {!editingId && !notifying && (
             <div className="flex items-center gap-3 pt-2">
               <Switch checked={notify} onCheckedChange={setNotify} />
@@ -511,7 +526,7 @@ function WallpapersTab() {
                     <div className="absolute top-2 right-2 bg-green-700 text-white text-[9px] uppercase tracking-wider px-2 py-0.5">FREE</div>
                   )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, additional_images: wp.additional_images ?? [], drive_url: wp.drive_url ?? "", featured: wp.featured, is_free: wp.is_free ?? false }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, additional_images: wp.additional_images ?? [], drive_url: wp.drive_url ?? "", featured: wp.featured, is_free: wp.is_free ?? false, show_on_home: wp.show_on_home ?? false }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
                     <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">
@@ -524,7 +539,13 @@ function WallpapersTab() {
                     <h4 className="font-serif leading-tight truncate text-sm" style={{ color: ADMIN_COLORS.text }}>{wp.name}</h4>
                     <p className="text-xs mt-0.5" style={{ color: ADMIN_COLORS.mocha }}>${wp.price}</p>
                   </div>
-                  <Switch checked={wp.featured} onCheckedChange={() => toggleFeatured(wp)} />
+                  <div className="flex items-center gap-3">
+                    <Switch checked={wp.featured} onCheckedChange={() => toggleFeatured(wp)} />
+                    <div className="flex flex-col items-center gap-0.5">
+                      <Switch checked={wp.show_on_home ?? false} onCheckedChange={() => toggleShowOnHome(wp)} className="scale-[0.5] origin-right" />
+                      <span className="text-[8px] uppercase tracking-wider" style={{ color: ADMIN_COLORS.mocha }}>Home</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

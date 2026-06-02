@@ -29,6 +29,7 @@ export interface Wallpaper {
   drive_url: string | null;
   featured: boolean;
   is_free?: boolean;
+  show_on_home?: boolean;
   created_at: string;
 }
 
@@ -120,7 +121,7 @@ export const getGetSettingsQueryKey = () => ["settings"] as const;
 // ---------------------------------------------------------------------------
 
 export function useListWallpapers(
-  params?: { featured?: boolean; category?: string },
+  params?: { featured?: boolean; show_on_home?: boolean; category?: string },
   options?: { query?: Partial<UseQueryOptions<Wallpaper[]>> }
 ) {
   return useQuery<Wallpaper[]>({
@@ -128,6 +129,7 @@ export function useListWallpapers(
     queryFn: async () => {
       let q = db().from("wallpapers").select("*").order("created_at", { ascending: false });
       if (params?.featured === true) q = q.eq("featured", true);
+      if (params?.show_on_home === true) q = q.eq("show_on_home", true);
       if (params?.category) q = q.eq("category", params.category);
       const { data, error } = await q;
       if (error) throw error;
