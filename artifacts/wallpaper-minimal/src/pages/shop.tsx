@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useSearch } from "wouter";
 import { usePageMeta } from "@/lib/usePageMeta";
+import { FreeDownloadModal } from "@/components/ui/FreeDownloadModal";
 
 export function Shop() {
   usePageMeta(
@@ -13,6 +14,8 @@ export function Shop() {
   const initialCategory = new URLSearchParams(search).get("category") ?? "All";
   const [activeCategory, setActiveCategory] = useState<string>(initialCategory);
   const [, navigate] = useLocation();
+
+  const [freeDownloadWp, setFreeDownloadWp] = useState<{ id: string; name: string; drive_url: string | null } | null>(null);
 
   const { data: categoriesData } = useGetCategories({
     query: { queryKey: getGetCategoriesQueryKey() },
@@ -85,6 +88,11 @@ export function Shop() {
                   <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-[10px] uppercase tracking-wider px-2 py-1 z-10">
                     {wallpaper.category}
                   </div>
+                  {wallpaper.is_free && (
+                    <div className="absolute top-3 right-3 bg-green-700 text-white text-[10px] uppercase tracking-wider px-2 py-1 z-10">
+                      FREE
+                    </div>
+                  )}
                   <img
                     src={wallpaper.image_url}
                     alt={wallpaper.name}
@@ -97,17 +105,29 @@ export function Shop() {
                 <div className="p-4 flex flex-col items-center flex-1 justify-between text-center">
                   <h3 className="font-serif text-lg mb-1">{wallpaper.name}</h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    ${Number(wallpaper.price).toFixed(2)}
+                    {wallpaper.is_free ? "FREE" : `$${Number(wallpaper.price).toFixed(2)}`}
                   </p>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/wallpaper/${wallpaper.id}`);
-                    }}
-                    className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors"
-                  >
-                    GET THIS →
-                  </button>
+                  {wallpaper.is_free ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFreeDownloadWp({ id: wallpaper.id, name: wallpaper.name, drive_url: wallpaper.drive_url });
+                      }}
+                      className="w-full py-2.5 bg-green-700 text-white text-[10px] uppercase tracking-widest hover:bg-green-800 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      Download Free
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/wallpaper/${wallpaper.id}`);
+                      }}
+                      className="w-full py-2.5 bg-black text-white text-[10px] uppercase tracking-widest hover:bg-black/80 transition-colors"
+                    >
+                      GET THIS →
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -119,6 +139,12 @@ export function Shop() {
           </div>
         )}
       </div>
+
+      <FreeDownloadModal
+        open={!!freeDownloadWp}
+        onClose={() => setFreeDownloadWp(null)}
+        wallpaper={freeDownloadWp ?? { id: "", name: "", drive_url: null }}
+      />
     </div>
   );
 }

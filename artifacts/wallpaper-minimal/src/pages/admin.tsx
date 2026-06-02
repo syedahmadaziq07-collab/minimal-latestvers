@@ -7,14 +7,15 @@ import {
   useListBundles, useCreateBundle, useUpdateBundle, useDeleteBundle, getListBundlesQueryKey,
   useListPromos, useCreatePromo, useUpdatePromo, useDeletePromo, getListPromosQueryKey,
   useGetSettings, useSaveSettings, getGetSettingsQueryKey,
-  useGetStyles, getGetStylesQueryKey
+  useGetStyles, getGetStylesQueryKey,
+  useGetFreeDownloads, useGetFreeDownloadStats, getFreeDownloadsQueryKey
 } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
   LayoutDashboard, Image as ImageIcon, ShoppingBag, Package, Tag, Settings, LogOut, 
-  Trash2, Edit2, Plus, UploadCloud, Loader2
+  Trash2, Edit2, Plus, UploadCloud, Loader2, Download
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -34,6 +35,7 @@ const ADMIN_COLORS = {
 
 function DashboardTab() {
   const { data: stats, isLoading } = useGetOrderStats({ query: { queryKey: getGetOrderStatsQueryKey() } });
+  const { data: freeStats } = useGetFreeDownloadStats({ query: { queryKey: [...getFreeDownloadsQueryKey(), "stats"] } });
 
   if (isLoading) return <div className="p-8 text-center text-[#9E8E78]">Loading stats...</div>;
   if (!stats) return null;
@@ -43,11 +45,13 @@ function DashboardTab() {
     { title: "Total Orders", value: stats.total_orders },
     { title: "Orders Today", value: stats.orders_today },
     { title: "Revenue Today", value: `$${stats.revenue_today.toFixed(2)}` },
+    { title: "Free Downloads", value: freeStats?.total ?? 0 },
+    { title: "Free Today", value: freeStats?.today ?? 0 },
   ];
 
   return (
     <div className="space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         {cards.map((card, i) => (
           <motion.div 
             key={i}
@@ -129,7 +133,7 @@ function WallpapersTab() {
   const deleteMutation = useDeleteWallpaper();
 
   const [formData, setFormData] = useState({
-    name: "", category: "", style: "", price: 4, image_url: "", additional_images: [] as string[], drive_url: "", featured: false
+    name: "", category: "", style: "", price: 4, image_url: "", additional_images: [] as string[], drive_url: "", featured: false, is_free: false
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -138,7 +142,7 @@ function WallpapersTab() {
   const [additionalUploading, setAdditionalUploading] = useState(false);
 
   const resetForm = () => {
-    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", additional_images: [], drive_url: "", featured: false });
+    setFormData({ name: "", category: "", style: "", price: 4, image_url: "", additional_images: [], drive_url: "", featured: false, is_free: false });
     setEditingId(null);
     setPreviewUrl(null);
   };
@@ -420,6 +424,11 @@ function WallpapersTab() {
             <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Featured Wallpaper</span>
           </div>
 
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={formData.is_free} onCheckedChange={(v) => setFormData({...formData, is_free: v})} />
+            <span className="text-sm" style={{ color: ADMIN_COLORS.text }}>Free Wallpaper</span>
+          </div>
+
           <div className="pt-4 flex gap-3">
             <button 
               type="submit" 
@@ -462,8 +471,11 @@ function WallpapersTab() {
                   {wp.featured && (
                     <div className="absolute top-2 left-2 bg-black text-white text-[9px] uppercase tracking-wider px-2 py-0.5">Featured</div>
                   )}
+                  {wp.is_free && (
+                    <div className="absolute top-2 right-2 bg-green-700 text-white text-[9px] uppercase tracking-wider px-2 py-0.5">FREE</div>
+                  )}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, additional_images: wp.additional_images ?? [], drive_url: wp.drive_url ?? "", featured: wp.featured }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
+                    <button onClick={() => { setFormData({ name: wp.name, category: wp.category, style: wp.style ?? "", price: wp.price, image_url: wp.image_url, additional_images: wp.additional_images ?? [], drive_url: wp.drive_url ?? "", featured: wp.featured, is_free: wp.is_free ?? false }); setEditingId(wp.id); setPreviewUrl(wp.image_url); }} className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-200">
                       <Edit2 size={14} className="text-black" />
                     </button>
                     <button onClick={() => handleDelete(wp.id)} className="w-8 h-8 bg-white text-red-600 rounded-full flex items-center justify-center hover:bg-gray-200">
@@ -962,6 +974,47 @@ function SettingsTab() {
 }
 
 // ---------------------------------------------------------------------------
+// Free Downloads Tab
+// ---------------------------------------------------------------------------
+
+function FreeDownloadsTab() {
+  const queryClient = useQueryClient();
+  const { data: downloads, isLoading } = useGetFreeDownloads({ query: { queryKey: getFreeDownloadsQueryKey() } });
+
+  if (isLoading) return <div className="p-8 text-center text-[#9E8E78]">Loading free downloads...</div>;
+
+  return (
+    <div className="rounded-sm border overflow-hidden" style={{ backgroundColor: ADMIN_COLORS.card, borderColor: ADMIN_COLORS.border }}>
+      {(downloads ?? []).length === 0 ? (
+        <div className="p-12 text-center" style={{ color: ADMIN_COLORS.mocha }}>
+          <Package className="mx-auto mb-4 opacity-50" size={32} />
+          <p>No free downloads yet.</p>
+        </div>
+      ) : (
+        <table className="w-full text-sm text-left">
+          <thead>
+            <tr className="border-b" style={{ borderColor: ADMIN_COLORS.border, color: ADMIN_COLORS.mocha }}>
+              <th className="px-4 py-3 font-normal">Email</th>
+              <th className="px-4 py-3 font-normal">Wallpaper</th>
+              <th className="px-4 py-3 font-normal">Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {downloads?.map((d) => (
+              <tr key={d.id} className="border-b last:border-0" style={{ borderColor: ADMIN_COLORS.border }}>
+                <td className="px-4 py-3 truncate max-w-[200px]">{d.email}</td>
+                <td className="px-4 py-3">{d.wallpaper_name}</td>
+                <td className="px-4 py-3">{new Date(d.downloaded_at).toLocaleString()}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Admin Component
 // ---------------------------------------------------------------------------
 
@@ -1018,6 +1071,7 @@ export function Admin() {
     { id: "orders", label: "Orders", icon: ShoppingBag },
     { id: "bundles", label: "Bundles", icon: Package },
     { id: "promos", label: "Promo Codes", icon: Tag },
+    { id: "free-downloads", label: "Free Downloads", icon: Download },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 
@@ -1078,6 +1132,7 @@ export function Admin() {
             {activeTab === "orders" && <OrdersTab />}
             {activeTab === "bundles" && <BundlesTab />}
             {activeTab === "promos" && <PromosTab />}
+            {activeTab === "free-downloads" && <FreeDownloadsTab />}
             {activeTab === "settings" && <SettingsTab />}
           </div>
         </div>

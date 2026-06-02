@@ -5,6 +5,7 @@ import { useGetWallpaper, getGetWallpaperQueryKey, useCreateCheckoutSession, use
 import { toast } from "sonner";
 import { ZoomIn, X, ChevronLeft, ChevronRight, ShieldCheck, Users } from "lucide-react";
 import { usePageMeta } from "@/lib/usePageMeta";
+import { FreeDownloadModal } from "@/components/ui/FreeDownloadModal";
 
 const BADGES = [
   { label: "4K Resolution" },
@@ -38,8 +39,14 @@ export function WallpaperDetail() {
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState(false);
 
+  const [showFreeModal, setShowFreeModal] = useState(false);
+
   const handleBuy = () => {
     if (!wallpaper) return;
+    if (wallpaper.is_free) {
+      setShowFreeModal(true);
+      return;
+    }
     checkoutMutation.mutate(
       {
         data: {
@@ -187,7 +194,7 @@ export function WallpaperDetail() {
 
             {/* Price */}
             <p className="text-3xl font-serif italic text-[#1A1A1A] mb-8">
-              ${Number(wallpaper.price).toFixed(2)}
+              {wallpaper.is_free ? "FREE" : `$${Number(wallpaper.price).toFixed(2)}`}
             </p>
 
             {/* Feature badges */}
@@ -203,20 +210,31 @@ export function WallpaperDetail() {
             </div>
 
             {/* CTA */}
-            <button
-              onClick={handleBuy}
-              disabled={checkoutMutation.isPending}
-              className="w-full py-5 bg-[#1A1A1A] text-white text-xs uppercase tracking-[3px] hover:bg-black/80 transition-colors disabled:opacity-50 mb-3"
-            >
-              {checkoutMutation.isPending
-                ? "Loading…"
-                : `BUY NOW — $${Number(wallpaper.price).toFixed(2)}`}
-            </button>
+            {wallpaper.is_free ? (
+              <button
+                onClick={handleBuy}
+                className="w-full py-5 bg-green-700 text-white text-xs uppercase tracking-[3px] hover:bg-green-800 transition-colors mb-3 flex items-center justify-center gap-2"
+              >
+                Download Free
+              </button>
+            ) : (
+              <button
+                onClick={handleBuy}
+                disabled={checkoutMutation.isPending}
+                className="w-full py-5 bg-[#1A1A1A] text-white text-xs uppercase tracking-[3px] hover:bg-black/80 transition-colors disabled:opacity-50 mb-3"
+              >
+                {checkoutMutation.isPending
+                  ? "Loading…"
+                  : `BUY NOW — $${Number(wallpaper.price).toFixed(2)}`}
+              </button>
+            )}
 
-            <div className="flex items-center justify-center gap-2 text-[11px] text-[#9E8E78]">
-              <ShieldCheck size={13} />
-              <span>Secure payment via Stripe</span>
-            </div>
+            {!wallpaper.is_free && (
+              <div className="flex items-center justify-center gap-2 text-[11px] text-[#9E8E78]">
+                <ShieldCheck size={13} />
+                <span>Secure payment via Stripe</span>
+              </div>
+            )}
             {purchaseCount > 0 && (
               <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#9E8E78] mt-3">
                 <Users size={13} />
@@ -268,6 +286,12 @@ export function WallpaperDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <FreeDownloadModal
+        open={showFreeModal}
+        onClose={() => setShowFreeModal(false)}
+        wallpaper={{ id: wallpaper.id, name: wallpaper.name, drive_url: wallpaper.drive_url }}
+      />
     </div>
   );
 }

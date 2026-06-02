@@ -28,7 +28,16 @@ export interface Wallpaper {
   additional_images: string[] | null;
   drive_url: string | null;
   featured: boolean;
+  is_free?: boolean;
   created_at: string;
+}
+
+export interface FreeDownload {
+  id: string;
+  email: string;
+  wallpaper_id: string;
+  wallpaper_name: string;
+  downloaded_at: string;
 }
 
 export interface CategoryCount {
@@ -579,5 +588,68 @@ export function useSaveSettings() {
         .upsert(rows, { onConflict: "key" });
       if (error) throw error;
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Free Downloads  (table: free_downloads)
+// ---------------------------------------------------------------------------
+
+export const getFreeDownloadsQueryKey = () => ["free-downloads"] as const;
+
+export function useCreateFreeDownload() {
+  return useMutation({
+    mutationFn: async ({
+      data,
+    }: {
+      data: { email: string; wallpaper_id: string; wallpaper_name: string };
+    }) => {
+      const { error } = await db()
+        .from("free_downloads")
+        .insert({
+          email: data.email,
+          wallpaper_id: data.wallpaper_id,
+          wallpaper_name: data.wallpaper_name,
+        });
+      if (error) throw error;
+    },
+  });
+}
+
+export function useGetFreeDownloads(options?: {
+  query?: Partial<UseQueryOptions<FreeDownload[]>>;
+}) {
+  return useQuery<FreeDownload[]>({
+    queryKey: getFreeDownloadsQueryKey(),
+    queryFn: async () => {
+      const { data, error } = await db()
+        .from("free_downloads")
+        .select("*")
+        .order("downloaded_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as FreeDownload[];
+    },
+    ...options?.query,
+  });
+}
+
+export function useGetFreeDownloadStats(options?: {
+  query?: Partial<UseQueryOptions<{ total: number; today: number }>>;
+}) {
+  return useQuery<{ total: number; today: number }>({
+    queryKey: [...getFreeDownloadsQueryKey(), "stats"],
+    queryFn: async () => {
+      const { data, error } = await db()
+        .from("free_downloads")
+        .select("downloaded_at");
+      if (error) throw error;
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const today = (data ?? []).filter(
+        (d) => new Date(d.downloaded_at) >= todayStart
+      ).length;
+      return { total: (data ?? []).length, today };
+    },
+    ...options?.query,
   });
 }
